@@ -137,4 +137,5 @@ Checked on 2 November 2026: both pinned sources hold the same file contents as u
 ## Not done yet
 
 - Gate 1: use the picker in a real project
-- lint and Storybook in CI, Next.js Pages Router test, Lighthouse score
+- lint and Storybook in CI, Lighthouse score
+- v0.3 maps; Gate 3 (boundary data origin) asked in cahyadsn/wilayah_boundaries#9, no answer yet
