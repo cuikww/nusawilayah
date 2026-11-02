@@ -1,5 +1,11 @@
 # @nusawilayah/core
 
+## 0.2.1
+
+### Patch Changes
+
+- e4c480b: Tambah README di halaman npm setiap paket. Rilis ini juga menjadi rilis pertama lewat npm Trusted Publishing (dengan provenance).
+
 ## 0.2.0
 
 ### Minor Changes

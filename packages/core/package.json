@@ -1,6 +1,6 @@
 {
   "name": "@nusawilayah/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Logika headless pemilih wilayah Indonesia: memuat data, cache, state bertingkat",
   "license": "MIT",
   "type": "module",
