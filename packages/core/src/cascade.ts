@@ -1,7 +1,6 @@
 // Framework-agnostic state for cascading dropdowns. Adapters (React, Vue) subscribe and render.
-import type { Alamat, Level, Wilayah, WilayahClient } from './index.ts';
-
-export const LEVELS: readonly Level[] = ['provinsi', 'kabupaten', 'kecamatan', 'desa'];
+import type { WilayahClient } from './index.ts';
+import { LEVELS, toAlamat, type Alamat, type Level, type Wilayah } from './wilayah.ts';
 
 export interface LevelState {
   level: Level;
@@ -14,21 +13,21 @@ export interface LevelState {
 export interface CascadeState {
   levels: LevelState[];
   alamat: Alamat;
-  /** Kode level terdalam yang terpilih, mis. '51.03.01.1001'. */
+  /** Kode of the deepest selected level, e.g. '51.03.01.1001'. */
   kode?: string;
 }
 
 export interface CascadeOptions {
-  /** Sampai level mana: 1 = provinsi ... 4 = desa (default). */
+  /** Deepest level: 1 = provinsi ... 4 = desa (default). */
   levels?: number;
-  /** Batasi pilihan provinsi, mis. ['51', '52']. */
+  /** Restrict the provinsi options, e.g. ['51', '52']. */
   provinsi?: string[];
 }
 
 type Client = Pick<WilayahClient, 'provinsi' | 'children'>;
 
 export function createCascade(client: Client, { levels: n = 4, provinsi: only }: CascadeOptions = {}) {
-  if (!Number.isInteger(n) || n < 1 || n > 4) throw new Error(`nusawilayah: levels harus 1-4, bukan ${n}`);
+  if (!Number.isInteger(n) || n < 1 || n > 4) throw new Error(`nusawilayah: levels must be 1-4, got ${n}`);
 
   const empty = (level: Level): LevelState => ({ level, options: [], loading: false });
   let state: CascadeState = { levels: LEVELS.slice(0, n).map(empty), alamat: {} };
@@ -40,11 +39,8 @@ export function createCascade(client: Client, { levels: n = 4, provinsi: only }:
   function update(fn: (levels: LevelState[]) => void) {
     const levels = state.levels.map((l) => ({ ...l }));
     fn(levels);
-    const alamat: Alamat = {};
-    let kode: string | undefined;
-    for (const l of levels) if (l.selected) { alamat[l.level] = l.selected; kode = l.selected.kode; }
-    if (alamat.desa?.kodePos) alamat.kodePos = alamat.desa.kodePos[0];
-    state = { levels, alamat, kode };
+    const selected = levels.flatMap((l) => (l.selected ? [l.selected] : []));
+    state = { levels, alamat: toAlamat(selected), kode: selected.at(-1)?.kode };
     for (const fn of listeners) fn(state);
   }
 
@@ -66,15 +62,15 @@ export function createCascade(client: Client, { levels: n = 4, provinsi: only }:
 
   const indexOf = (level: Level | number) => {
     const i = typeof level === 'number' ? level : LEVELS.indexOf(level);
-    if (!(i >= 0 && i < n)) throw new Error(`nusawilayah: level di luar cakupan: ${level}`);
+    if (!(i >= 0 && i < n)) throw new Error(`nusawilayah: level out of range: ${level}`);
     return i;
   };
 
-  /** Pilih wilayah di satu level; level di bawahnya dikosongkan lalu dimuat. Resolve setelah level berikutnya termuat. */
+  /** Selects a wilayah at one level, clears the levels below and loads the next one. Resolves once it has loaded. */
   function choose(level: Level | number, kode?: string): Promise<void> {
     const i = indexOf(level);
     const selected = kode ? state.levels[i].options.find((o) => o.kode === kode) : undefined;
-    if (kode && !selected) throw new Error(`nusawilayah: ${kode} tidak ada di pilihan ${LEVELS[i]}`);
+    if (kode && !selected) throw new Error(`nusawilayah: ${kode} is not an option at level ${LEVELS[i]}`);
     update((l) => {
       l[i].selected = selected;
       for (let j = i + 1; j < n; j++) { gen[j]++; l[j] = empty(l[j].level); }
@@ -82,7 +78,7 @@ export function createCascade(client: Client, { levels: n = 4, provinsi: only }:
     return selected && i + 1 < n ? loadOptions(i + 1) : Promise.resolve();
   }
 
-  /** Isi semua level dari satu kode (form edit). Kode yang lebih dalam dari `levels` dipotong. Tanpa kode = kosongkan. */
+  /** Fills every level from one kode (edit forms). A kode deeper than `levels` is truncated; no kode clears the picker. */
   async function setValue(kode?: string): Promise<void> {
     const my = ++valueGen;
     if (!kode) return choose(0);
@@ -104,15 +100,15 @@ export function createCascade(client: Client, { levels: n = 4, provinsi: only }:
       listeners.add(fn);
       return () => { listeners.delete(fn); };
     },
-    /** Pilihan pengguna; membatalkan setValue yang masih berjalan. */
+    /** A user choice. Cancels a setValue still in progress. */
     select(level: Level | number, kode?: string) {
       valueGen++;
       return choose(level, kode);
     },
     setValue,
-    /** Muat ulang pilihan untuk level yang gagal. */
+    /** Reloads the options of a level that failed. */
     retry: (level: Level | number) => loadOptions(indexOf(level)),
-    /** Resolve setelah daftar provinsi pertama termuat (atau gagal). */
+    /** Resolves once the first provinsi list has loaded (or failed). */
     ready,
   };
 }

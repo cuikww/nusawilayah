@@ -1,25 +1,26 @@
 // In-browser search over the national index (provinsi..kecamatan) plus per-provinsi desa indexes loaded on demand.
-import type { Wilayah } from './index.ts';
+import type { Loader } from './loader.ts';
+import { displayName, formatPath, toWilayah, type Wilayah } from './wilayah.ts';
 
 export interface SearchOptions {
-  /** Jumlah hasil maksimum. Default 10. */
+  /** Maximum number of results. Default 10. */
   limit?: number;
-  /** Level terdalam yang dicari: 1 = provinsi ... 4 = desa (default). */
+  /** Deepest level searched: 1 = provinsi ... 4 = desa (default). */
   levels?: number;
-  /** Batasi ke provinsi tertentu; indeks desa provinsi ini selalu dimuat. */
+  /** Restrict to these provinsi; their desa indexes are always loaded. */
   provinsi?: string[];
 }
 
 export interface SearchResult {
   wilayah: Wilayah;
-  /** Jalur lengkap untuk ditampilkan, mis. 'Kuta, Badung, Bali'. */
+  /** Full path for display, e.g. 'Kuta, Badung, Bali'. */
   label: string;
 }
 
 type Row = [kode: string, nama: string];
 interface Entry { kode: string; nama: string; words: string[]; norm: string; bare: string }
 
-// Words the PRD says to ignore in queries. "kota" is kept: it tells Kota Bogor from Kabupaten Bogor.
+// Level words are ignored in queries (PRD). "kota" is kept: it tells Kota Bogor from Kabupaten Bogor.
 const STOP = new Set(['kabupaten', 'kab', 'kecamatan', 'kec', 'desa', 'kelurahan', 'kel', 'provinsi', 'prov']);
 // ponytail: desa indexes for at most 3 provinsi per query; raise if users search villages without naming a parent.
 const MAX_DESA_PROVINSI = 3;
@@ -27,18 +28,15 @@ const MAX_DESA_PROVINSI = 3;
 export const normalize = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ'`’]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
-const display = (nama: string) => nama.replace(/^Kabupaten /, '');
-
 const toEntry = ([kode, nama]: Row): Entry => {
-  const norm = normalize(display(nama));
+  const norm = normalize(displayName(nama));
   return { kode, nama, norm, bare: norm.replace(/^kota /, ''), words: norm.split(' ') };
 };
 
 const hits = (token: string, words: string[]) => words.some((w) => w.startsWith(token));
 
 export function createSearch(
-  loadRaw: (path: string) => Promise<unknown>,
-  toWilayah: (row: Row) => Wilayah,
+  loadRaw: Loader,
   byPostalCode: (kodePos: string) => Promise<Wilayah[]>,
 ) {
   let nasional: Promise<{ entries: Entry[]; byKode: Map<string, Entry> }> | undefined;
@@ -67,7 +65,7 @@ export function createSearch(
       for (let k = kode; k.includes('.'); ) { k = k.slice(0, k.lastIndexOf('.')); out.push(byKode.get(k)!); }
       return out;
     };
-    const label = (e: { kode: string; nama: string }) => [e, ...ancestors(e.kode)].map((x) => display(x.nama)).join(', ');
+    const label = (e: { kode: string; nama: string }) => formatPath([e, ...ancestors(e.kode)]);
 
     const q = query.trim();
     if (/^\d{5}$/.test(q)) {

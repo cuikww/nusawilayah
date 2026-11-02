@@ -1,7 +1,7 @@
 {
   "name": "@nusawilayah/core",
   "version": "0.2.1",
-  "description": "Logika headless pemilih wilayah Indonesia: memuat data, cache, state bertingkat",
+  "description": "Headless Indonesian region picker client: on-demand data loading, cache, search and cascading state",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,

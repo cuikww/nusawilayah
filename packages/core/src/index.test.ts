@@ -39,7 +39,7 @@ describe('createWilayah', () => {
   it('rejects invalid kode before fetching (no path traversal)', async () => {
     const fetcher = fakeFetcher();
     const w = createWilayah({ fetcher });
-    for (const bad of ['../51', '51.03.01.1001', '5', '51/03', '']) await expect(w.children(bad)).rejects.toThrow('tidak valid');
+    for (const bad of ['../51', '51.03.01.1001', '5', '51/03', '']) await expect(w.children(bad)).rejects.toThrow('invalid');
     expect(fetcher).not.toHaveBeenCalled();
   });
 

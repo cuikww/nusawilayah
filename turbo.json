@@ -14,14 +14,20 @@
         "^build"
       ]
     },
-    "typecheck": {},
+    "typecheck": {
+      "dependsOn": [
+        "^build"
+      ]
+    },
     "@nusawilayah/data#build": {
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/pipeline/*.ts"
+        "$TURBO_ROOT$/pipeline/*.ts",
+        "$TURBO_ROOT$/packages/core/src/wilayah.ts"
       ],
       "outputs": [
-        "dist/**"
+        "dist/**",
+        "export/**"
       ]
     }
   }

@@ -20,8 +20,8 @@ describe('resolve', () => {
     expect(Object.keys(await client().resolve('51.03'))).toEqual(['provinsi', 'kabupaten']);
   });
   it('rejects unknown and malformed kode', async () => {
-    await expect(client().resolve('51.99')).rejects.toThrow('tidak ditemukan: 51.99');
-    await expect(client().resolve('51/03')).rejects.toThrow('tidak valid');
+    await expect(client().resolve('51.99')).rejects.toThrow('not found: 51.99');
+    await expect(client().resolve('51/03')).rejects.toThrow('invalid');
   });
 });
 
@@ -32,7 +32,7 @@ describe('byPostalCode', () => {
     expect(await client().byPostalCode('11111')).toEqual([]); // prefix file 404
   });
   it('validates input and does not swallow network errors', async () => {
-    await expect(client().byPostalCode('8036')).rejects.toThrow('tidak valid');
+    await expect(client().byPostalCode('8036')).rejects.toThrow('invalid');
     await expect(client(async () => { throw new Error('offline'); }).byPostalCode('80361')).rejects.toThrow('offline');
   });
 });
@@ -76,7 +76,7 @@ describe('createCascade', () => {
     expect(c.getState().levels).toHaveLength(3);
     await c.setValue();
     expect(c.getState().alamat).toEqual({});
-    await expect(c.setValue('51.99')).rejects.toThrow('tidak ada di pilihan');
+    await expect(c.setValue('51.99')).rejects.toThrow('is not an option');
   });
 
   it('a user select cancels an in-flight setValue', async () => {
@@ -106,7 +106,7 @@ describe('createCascade', () => {
     expect(c.getState().levels[1].options).toHaveLength(2);
     expect(seen).toHaveBeenCalled();
     unsubscribe();
-    expect(() => client().createCascade({ levels: 5 })).toThrow('levels harus 1-4');
-    expect(() => c.select('desa', 'x')).toThrow('tidak ada di pilihan');
+    expect(() => client().createCascade({ levels: 5 })).toThrow('levels must be 1-4');
+    expect(() => c.select('desa', 'x')).toThrow('is not an option');
   });
 });

@@ -1,7 +1,7 @@
 import { createWilayah } from '@nusawilayah/core';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { labelsEn, WilayahPicker, type FieldProps } from './index.tsx';
+import { labelsEn, WilayahPicker, type FieldProps } from './index.ts';
 
 const files: Record<string, unknown> = {
   'provinsi.json': [['51', 'Bali'], ['52', 'Nusa Tenggara Barat']],
