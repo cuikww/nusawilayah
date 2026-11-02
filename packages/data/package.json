@@ -4,7 +4,8 @@
   "description": "Data wilayah Indonesia (Kepmendagri No. 300.2.2-2430 Tahun 2025) + kode pos, dipecah per wilayah induk dalam JSON",
   "license": "MIT",
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "pnpm --filter @nusawilayah/pipeline build:data"
