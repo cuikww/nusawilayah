@@ -86,7 +86,7 @@ pnpm --filter example-vite dev   # demo di browser (data self-host)
 pnpm --filter example-vite e2e   # uji Playwright + axe di Chrome
 ```
 
-Rilis memakai [Changesets](https://github.com/changesets/changesets): tambahkan changeset dengan `pnpm changeset`. Workflow Release lalu membuka PR "Version Packages", dan paket dipublish ke npm saat PR itu di-merge (butuh secret `NPM_TOKEN`).
+Rilis memakai [Changesets](https://github.com/changesets/changesets): tambahkan changeset dengan `pnpm changeset`. Workflow Release lalu membuka PR "Version Packages", dan paket dipublish ke npm saat PR itu di-merge. Publish memakai npm Trusted Publishing (OIDC dari GitHub Actions, dengan provenance), jadi tidak ada token npm yang disimpan.
 
 Butuh Node 24+ (pipeline dijalankan langsung sebagai TypeScript). Sumber data dipin per commit di [pipeline/build.ts](pipeline/build.ts).
 

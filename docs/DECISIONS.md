@@ -68,6 +68,12 @@ Nama disimpan sesuai nama resmi, termasuk awalan "Kabupaten"/"Kota".
 
 **Versi data `2025.2.1`:** penambahan indeks pencarian adalah patch, karena data wilayah tidak berubah. URL CDN `@2025.2` otomatis mengikuti.
 
+## 2026-11-02 — Rilis lewat Trusted Publishing
+
+**Temuan:** rilis 0.1.0 dan 0.2.0 terbit memakai token `NPM_TOKEN`, tanpa provenance, meskipun `publishConfig.provenance: true`. Pertukaran token OIDC dilakukan oleh npm CLI (≥ 11.5.1), dan `pnpm publish` diam-diam memakai token kalau token tersedia.
+
+**Keputusan:** workflow Release dipecah. changesets/action hanya membuat PR versi, lalu step terpisah menjalankan `pnpm release` dengan npm terbaru, `id-token: write`, `NPM_CONFIG_PROVENANCE=true`, dan **tanpa token sama sekali**. Kalau trusted publisher belum diatur di npm, publish gagal dengan jelas, tidak diam-diam memakai token.
+
 ## Belum dikerjakan
 
 - core: cache IndexedDB, alias nama lama di pencarian

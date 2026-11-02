@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: write # version commit + tags
       pull-requests: write # "Version Packages" PR
-      id-token: write # npm provenance
+      id-token: write # npm trusted publishing (OIDC) + provenance
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -19,16 +19,23 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          registry-url: https://registry.npmjs.org
+      # The OIDC token exchange is done by the npm CLI (>= 11.5.1), which pnpm publish delegates to.
+      - run: npm install -g npm@latest
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
-      # Opens/updates a "Version Packages" PR while changesets are pending; publishes once that PR is merged.
-      - uses: changesets/action@v1
+
+      # Opens/updates the "Version Packages" PR while changesets are pending.
+      - id: changesets
+        uses: changesets/action@v1
         with:
-          publish: pnpm release
           title: 'chore: version packages'
           commit: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Once that PR is merged: publish unpublished versions via trusted publishing. No npm token on purpose,
+      # so a misconfigured trusted publisher fails loudly instead of silently falling back to a token.
+      - if: steps.changesets.outputs.hasChangesets == 'false'
+        run: pnpm release && git push --tags
+        env:
+          NPM_CONFIG_PROVENANCE: 'true'
