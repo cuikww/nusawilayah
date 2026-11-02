@@ -1,6 +1,6 @@
 {
   "name": "@nusawilayah/react",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Komponen React <WilayahPicker> dan hook useWilayah untuk memilih wilayah Indonesia",
   "license": "MIT",
   "type": "module",
