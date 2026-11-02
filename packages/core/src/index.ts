@@ -1,7 +1,9 @@
 import { createCascade, LEVELS, type CascadeOptions } from './cascade.ts';
+import { createSearch } from './search.ts';
 
 export { LEVELS };
 export type { Cascade, CascadeOptions, CascadeState, LevelState } from './cascade.ts';
+export type { SearchOptions, SearchResult } from './search.ts';
 
 export type Level = 'provinsi' | 'kabupaten' | 'kecamatan' | 'desa';
 
@@ -108,7 +110,10 @@ export function createWilayah({ baseUrl = DEFAULT_BASE_URL, fetcher }: WilayahOp
     return (index[kodePos] ?? []).map(([kode, nama]) => toWilayah([kode, nama, kodePos]));
   }
 
-  const client = { provinsi, children, resolve, byPostalCode, createCascade: (opts?: CascadeOptions) => createCascade(client, opts) };
+  /** Cari wilayah dengan nama (cocok awalan, tanpa server) atau kode pos 5 digit: search('denpasar sel'). */
+  const search = createSearch(loadRaw, toWilayah, byPostalCode);
+
+  const client = { provinsi, children, resolve, byPostalCode, search, createCascade: (opts?: CascadeOptions) => createCascade(client, opts) };
   return client;
 }
 

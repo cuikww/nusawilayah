@@ -37,6 +37,8 @@ describe('split', () => {
       'kabupaten/51.json': [['51.03', 'Kabupaten Badung']],
       'kecamatan/51.03.json': [['51.03.01', 'Kuta']],
       'desa/51.03.01.json': [['51.03.01.1001', 'Tuban', '80361']],
+      'search/nasional.json': [['51', 'Bali'], ['51.03', 'Kabupaten Badung'], ['51.03.01', 'Kuta']],
+      'search/51.json': [['51.03.01.1001', 'Tuban']],
       'kodepos/80.json': { '80361': [['51.03.01.1001', 'Tuban']] },
     });
   });

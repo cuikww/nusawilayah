@@ -50,6 +50,7 @@ export function validate(wilayah: [string, string][], kodepos: Map<string, strin
  * Split into files keyed by output path. Rows are tuples to keep files small:
  * [kode, nama] for provinsi/kabupaten/kecamatan, [kode, nama, kodepos] for desa.
  * Level, induk, and tipe are derived from kode/nama by core.
+ * Search indexes: search/nasional.json (provinsi..kecamatan) and search/{provinsi}.json (desa per provinsi).
  */
 export function split(wilayah: [string, string][], kodepos: Map<string, string>) {
   const files = new Map<string, unknown>();
@@ -61,10 +62,15 @@ export function split(wilayah: [string, string][], kodepos: Map<string, string>)
 
   for (const [kode, nama] of [...wilayah].sort((a, b) => a[0].localeCompare(b[0]))) {
     const level = levelOf(kode);
-    if (level === 'provinsi') { push('provinsi.json', [kode, nama]); continue; }
-    if (level !== 'desa') { push(`${level}/${parentOf(kode)}.json`, [kode, nama]); continue; }
+    if (level === 'provinsi') { push('provinsi.json', [kode, nama]); push('search/nasional.json', [kode, nama]); continue; }
+    if (level !== 'desa') {
+      push(`${level}/${parentOf(kode)}.json`, [kode, nama]);
+      push('search/nasional.json', [kode, nama]);
+      continue;
+    }
     const pos = kodepos.get(kode)!;
     push(`desa/${parentOf(kode)}.json`, [kode, nama, pos]);
+    push(`search/${kode.slice(0, 2)}.json`, [kode, nama]);
     ((byPos[pos.slice(0, 2)] ??= {})[pos] ??= []).push([kode, nama]);
   }
   for (const [prefix, index] of Object.entries(byPos)) files.set(`kodepos/${prefix}.json`, index);

@@ -2,7 +2,7 @@
 
 Pemilih wilayah Indonesia (provinsi → kabupaten/kota → kecamatan → desa/kelurahan + kode pos) dan peta, memakai data resmi **Kepmendagri No. 300.2.2-2430 Tahun 2025** (38 / 514 / 7.285 / 83.762).
 
-> Status: v0.1 (mode cascade). Mode pencarian menyusul di v0.2, peta di v0.3.
+> Status: v0.2 (mode cascade + pencarian). Peta menyusul di v0.3.
 
 ## Pakai di React
 
@@ -16,10 +16,17 @@ import { WilayahPicker } from '@nusawilayah/react'
 <WilayahPicker onChange={(alamat) => save(alamat)} />
 ```
 
+Mode pencarian: satu kolom, ketik nama ("denpasar sel") atau kode pos ("80361"):
+
+```tsx
+<WilayahPicker mode="search" onChange={(alamat) => save(alamat)} />
+```
+
 `onChange` menerima `Alamat`: `{ provinsi, kabupaten, kecamatan, desa, kodePos }`, dan setiap level berisi `{ kode, nama, level, tipe?, induk? }`.
 
 | Prop | Kegunaan |
 | --- | --- |
+| `mode` | `cascade` (default, satu dropdown per level) atau `search` (satu kolom pencarian) |
 | `levels` | 1 (provinsi) sampai 4 (desa, default) |
 | `defaultValue` / `value` | kode tersimpan untuk form edit, mis. `'51.03.01.1001'`; `value` juga menerima `Alamat` |
 | `name` | hidden input untuk form HTML biasa: `{name}` = kode terdalam, `{name}_kodepos` = kode pos |
@@ -28,7 +35,7 @@ import { WilayahPicker } from '@nusawilayah/react'
 | `components={{ Field }}` | ganti field bawaan dengan komponen UI sendiri (shadcn/ui, MUI) |
 | `client` | klien core sendiri (self-host / fetcher kustom) |
 
-Tanpa gaya bawaan. Atur tampilan lewat `className` dan atribut `data-nw-field`/`data-nw-error`.
+Tanpa gaya bawaan. Atur tampilan lewat `className` dan atribut `data-nw-field`, `data-nw-error`, dan `data-nw-active` (hasil pencarian yang sedang disorot). Contoh lengkap ada di [apps/example-vite](apps/example-vite).
 
 React Hook Form:
 
@@ -52,6 +59,7 @@ await w.provinsi()                  // 38 provinsi
 await w.children('51')              // kabupaten/kota di Bali
 await w.resolve('51.03.01.1001')    // Alamat lengkap untuk form edit
 await w.byPostalCode('80361')       // semua desa dengan kode pos ini
+await w.search('denpasar sel')      // [{ wilayah, label: 'Denpasar Selatan, Kota Denpasar, Bali' }]
 const cascade = w.createCascade()   // state dropdown bertingkat untuk adapter framework lain
 ```
 
@@ -74,6 +82,8 @@ pnpm install
 pnpm build      # bangun core + jalankan pipeline data (gagal jika validasi gagal)
 pnpm test
 pnpm typecheck
+pnpm --filter example-vite dev   # demo di browser (data self-host)
+pnpm --filter example-vite e2e   # uji Playwright + axe di Chrome
 ```
 
 Rilis memakai [Changesets](https://github.com/changesets/changesets): tambahkan changeset dengan `pnpm changeset`. Workflow Release lalu membuka PR "Version Packages", dan paket dipublish ke npm saat PR itu di-merge (butuh secret `NPM_TOKEN`).

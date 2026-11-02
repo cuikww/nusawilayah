@@ -48,10 +48,30 @@ Nama disimpan sesuai nama resmi, termasuk awalan "Kabupaten"/"Kota".
 
 **Rilis:** Changesets + GitHub Actions, provenance npm. Versi pertama kode 0.1.0. Data mulai di 2025.2.0 (format `TAHUN.REVISI.patch`).
 
+## 2026-11-02 — v0.2: mode pencarian
+
+**Indeks pencarian dua lapis.** Lapis pertama `search/nasional.json` (provinsi sampai kecamatan, 7.837 entri) selalu dimuat. Lapis kedua `search/{provinsi}.json` (desa) rata-rata 17 KB dan terbesar 59 KB gzip. Indeks desa hanya dimuat untuk provinsi yang relevan: yang dibatasi lewat `provinsi`, atau maksimal 3 provinsi teratas yang namanya cocok dengan salah satu kata kueri. Akibatnya, desa yang dicari tanpa menyebut induknya ("seminyak" saja) tidak ditemukan, sedangkan "seminyak kuta" atau "seminyak bali" ditemukan.
+
+**Aturan cocok:** setiap kata kueri harus menjadi awalan dari salah satu kata di nama wilayah atau nama induknya, dan minimal satu kata cocok dengan nama wilayah itu sendiri. Kata "kabupaten/kab/kecamatan/kec/desa/kelurahan/kel/provinsi/prov" diabaikan. Kata "kota" tidak diabaikan karena membedakan Kota Bogor dari Kabupaten Bogor. Huruf besar/kecil, aksen, dan apostrof diabaikan ("bau" cocok dengan "Ba'u").
+
+**Peringkat:** nama yang persis sama dengan kueri lebih dulu ("Kota X" dianggap persis untuk "x"), lalu yang diawali kueri, lalu level yang lebih tinggi, lalu nama yang lebih pendek.
+
+**Kode pos di kolom pencarian.** Lima digit diperlakukan sebagai kode pos. Ini memenuhi F3.3 arah balik: jika satu kode pos mencakup beberapa desa, pengguna memilih dari daftar.
+
+**Label tampilan** membuang awalan "Kabupaten " ("Kuta, Badung, Bali") tapi mempertahankan "Kota " supaya tidak ambigu.
+
+**Combobox ARIA 1.2** untuk mode search: input `role=combobox`, `listbox`/`option`, `aria-activedescendant`, `role=status` untuk "tidak ditemukan". Diuji axe (WCAG 2.1 AA) di Chrome sungguhan: 0 pelanggaran.
+
+**Uji browser:** `apps/example-vite` (data self-host lewat `publicDir`) + Playwright memakai Chrome yang terpasang (`channel: 'chrome'`), dijalankan di CI.
+
+**Ukuran bundle v0.2:** core 3,3 KB + react 3,0 KB gzip (target < 15 KB).
+
+**Versi data `2025.2.1`:** penambahan indeks pencarian adalah patch, karena data wilayah tidak berubah. URL CDN `@2025.2` otomatis mengikuti.
+
 ## Belum dikerjakan
 
-- core: `search` + indeks pencarian (mode search, v0.2), cache IndexedDB
-- React: mode search, input kode pos → wilayah, render provinsi dari server (RSC)
+- core: cache IndexedDB, alias nama lama di pencarian
+- React: render provinsi dari server (RSC)
 - CLI `npx nusawilayah copy`
 - keluaran SQLite/CSV, `changes.json`, SPEC.md
-- uji di browser sungguhan (Playwright + aplikasi contoh) dan waktu muat di HP kelas menengah
+- waktu muat di HP kelas menengah

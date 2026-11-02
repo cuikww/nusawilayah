@@ -1,7 +1,7 @@
-import { createWilayah, LEVELS, type Alamat, type CascadeOptions, type Level, type LevelState, type Wilayah, type WilayahClient } from '@nusawilayah/core';
-import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useSyncExternalStore, type ComponentType, type Ref } from 'react';
+import { createWilayah, LEVELS, type Alamat, type CascadeOptions, type Level, type LevelState, type SearchOptions, type SearchResult, type Wilayah, type WilayahClient } from '@nusawilayah/core';
+import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ComponentType, type Ref } from 'react';
 
-export type { Alamat, Level, Wilayah } from '@nusawilayah/core';
+export type { Alamat, Level, SearchResult, Wilayah } from '@nusawilayah/core';
 
 export interface Labels extends Record<Level, string> {
   kodePos: string;
@@ -9,6 +9,9 @@ export interface Labels extends Record<Level, string> {
   retry: string;
   /** Teks pilihan kosong per level; `{label}` diganti nama level. */
   placeholder: string;
+  search: string;
+  searchPlaceholder: string;
+  noResults: string;
 }
 
 export const labelsId: Labels = {
@@ -20,6 +23,9 @@ export const labelsId: Labels = {
   loading: 'Memuat…',
   retry: 'Coba lagi',
   placeholder: 'Pilih {label}',
+  search: 'Cari wilayah',
+  searchPlaceholder: 'Ketik nama wilayah atau kode pos',
+  noResults: 'Wilayah tidak ditemukan',
 };
 
 export const labelsEn: Labels = {
@@ -31,6 +37,9 @@ export const labelsEn: Labels = {
   loading: 'Loading…',
   retry: 'Retry',
   placeholder: 'Select {label}',
+  search: 'Search region',
+  searchPlaceholder: 'Type a region name or postal code',
+  noResults: 'No region found',
 };
 
 export interface UseWilayahOptions extends CascadeOptions {
@@ -77,7 +86,16 @@ export function useWilayah({ client, levels = 4, provinsi, defaultValue, value, 
     [cascade],
   );
 
-  return { ...state, select, retry: cascade.retry };
+  /** Isi semua level dari satu kode (mis. hasil pencarian), lalu panggil onChange. */
+  const setKode = useCallback(
+    async (kode: string) => {
+      await cascade.setValue(kode);
+      onChangeRef.current?.(cascade.getState().alamat);
+    },
+    [cascade],
+  );
+
+  return { ...state, select, setKode, retry: cascade.retry, client: c };
 }
 
 /** Props untuk mengganti satu field (label + dropdown + status) dengan komponen UI sendiri. */
@@ -132,7 +150,118 @@ function DefaultField(p: FieldProps) {
   );
 }
 
+const display = (w?: Wilayah) => w?.nama.replace(/^Kabupaten /, '');
+const alamatLabel = (a: Alamat) => [a.desa, a.kecamatan, a.kabupaten, a.provinsi].map(display).filter(Boolean).join(', ');
+
+interface SearchFieldProps {
+  id: string;
+  client: WilayahClient;
+  options: SearchOptions;
+  labels: Labels;
+  /** Label of the current value, shown when the user is not typing. */
+  current: string;
+  onPick: (kode: string) => void;
+  onBlur?: () => void;
+  disabled?: boolean;
+  required?: boolean;
+  inputRef?: Ref<HTMLInputElement>;
+}
+
+/** ARIA 1.2 combobox: one text input + listbox of results. */
+function SearchField({ id, client, options, labels, current, onPick, onBlur, disabled, required, inputRef }: SearchFieldProps) {
+  const [query, setQuery] = useState<string | null>(null); // null = not editing, show `current`
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [active, setActive] = useState(-1);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error>();
+  const latest = useRef(0);
+  const listId = `${id}-list`;
+
+  const run = (q: string) => {
+    const my = ++latest.current;
+    if (!q.trim()) { setResults([]); setLoading(false); return; }
+    setLoading(true);
+    setError(undefined);
+    client.search(q, options).then(
+      (r) => { if (my === latest.current) { setResults(r); setActive(r.length ? 0 : -1); setLoading(false); } },
+      (e) => { if (my === latest.current) { setError(e); setLoading(false); } },
+    );
+  };
+  const pick = (r: SearchResult) => {
+    setQuery(null);
+    setOpen(false);
+    onPick(r.wilayah.kode);
+  };
+  const close = () => { setOpen(false); setQuery(null); };
+
+  const showList = open && query !== null && query.trim() !== '' && !loading && !error;
+  return (
+    <div data-nw-field="search">
+      <label htmlFor={id}>{labels.search}</label>
+      <input
+        id={id}
+        ref={inputRef}
+        type="text"
+        role="combobox"
+        autoComplete="off"
+        aria-autocomplete="list"
+        aria-expanded={showList}
+        aria-controls={listId}
+        aria-activedescendant={showList && active >= 0 ? `${id}-opt-${active}` : undefined}
+        aria-busy={loading || undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+        placeholder={labels.searchPlaceholder}
+        value={query ?? current}
+        disabled={disabled}
+        required={required}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); run(e.target.value); }}
+        onBlur={() => { close(); onBlur?.(); }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!showList) { setOpen(true); return; }
+            const d = e.key === 'ArrowDown' ? 1 : -1;
+            setActive((a) => (results.length ? (a + d + results.length) % results.length : -1));
+          } else if (e.key === 'Enter' && showList && results[active]) {
+            e.preventDefault();
+            pick(results[active]);
+          } else if (e.key === 'Escape') {
+            close();
+          }
+        }}
+      />
+      <ul id={listId} role="listbox" aria-label={labels.search} hidden={!showList || !results.length}>
+        {results.map((r, i) => (
+          <li
+            key={r.wilayah.kode}
+            id={`${id}-opt-${i}`}
+            role="option"
+            aria-selected={i === active}
+            data-nw-active={i === active || undefined}
+            onMouseDown={(e) => { e.preventDefault(); pick(r); }} // before input blur
+            onMouseEnter={() => setActive(i)}
+          >
+            {r.label}
+          </li>
+        ))}
+      </ul>
+      <div role="status" data-nw-status>
+        {loading ? labels.loading : showList && !results.length ? labels.noResults : ''}
+      </div>
+      {error && (
+        <span id={`${id}-error`} role="alert" data-nw-error>
+          {error.message}{' '}
+          <button type="button" onClick={() => run(query ?? '')}>{labels.retry}</button>
+        </span>
+      )}
+    </div>
+  );
+}
+
 export interface WilayahPickerProps extends UseWilayahOptions {
+  /** `cascade`: satu dropdown per level (default). `search`: satu kolom pencarian, termasuk kode pos. */
+  mode?: 'cascade' | 'search';
   /** Nama hidden input: `{name}` berisi kode terdalam, `{name}_kodepos` berisi kode pos. Untuk form HTML biasa. */
   name?: string;
   required?: boolean;
@@ -147,9 +276,9 @@ export interface WilayahPickerProps extends UseWilayahOptions {
   id?: string;
 }
 
-/** Dropdown bertingkat provinsi → kabupaten/kota → kecamatan → desa/kelurahan, plus kode pos. */
-export const WilayahPicker = forwardRef<HTMLSelectElement, WilayahPickerProps>(function WilayahPicker(
-  { name, required, disabled, placeholder, labels: labelOverrides, className, components, onBlur, id, ...options },
+/** Pemilih wilayah provinsi → kabupaten/kota → kecamatan → desa/kelurahan, plus kode pos. */
+export const WilayahPicker = forwardRef<HTMLSelectElement | HTMLInputElement, WilayahPickerProps>(function WilayahPicker(
+  { mode = 'cascade', name, required, disabled, placeholder, labels: labelOverrides, className, components, onBlur, id, ...options },
   ref,
 ) {
   const w = useWilayah(options);
@@ -160,8 +289,22 @@ export const WilayahPicker = forwardRef<HTMLSelectElement, WilayahPickerProps>(f
   const showKodePos = w.levels.length === 4;
 
   return (
-    <div className={className} data-nw-picker="">
-      {w.levels.map((l: LevelState, i) => (
+    <div className={className} data-nw-picker={mode}>
+      {mode === 'search' && (
+        <SearchField
+          id={`${base}-search`}
+          client={w.client}
+          options={{ levels: w.levels.length, provinsi: options.provinsi }}
+          labels={labels}
+          current={alamatLabel(w.alamat)}
+          onPick={(kode) => void w.setKode(kode).catch((e) => console.error('nusawilayah:', e))}
+          onBlur={onBlur}
+          disabled={disabled}
+          required={required}
+          inputRef={ref as Ref<HTMLInputElement>}
+        />
+      )}
+      {mode === 'cascade' && w.levels.map((l: LevelState, i) => (
         <Field
           key={l.level}
           id={`${base}-${l.level}`}
@@ -178,7 +321,7 @@ export const WilayahPicker = forwardRef<HTMLSelectElement, WilayahPickerProps>(f
           error={l.error}
           onRetry={() => void w.retry(i)}
           labels={labels}
-          selectRef={i === 0 ? ref : undefined}
+          selectRef={i === 0 ? (ref as Ref<HTMLSelectElement>) : undefined}
         />
       ))}
       {showKodePos && (

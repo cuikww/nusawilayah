@@ -23,3 +23,5 @@ jobs:
       - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm test
+      # Real-browser test of the example app (uses the runner's installed Chrome)
+      - run: pnpm --filter example-vite e2e

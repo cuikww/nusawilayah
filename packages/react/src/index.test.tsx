@@ -7,7 +7,10 @@ const files: Record<string, unknown> = {
   'provinsi.json': [['51', 'Bali'], ['52', 'Nusa Tenggara Barat']],
   'kabupaten/51.json': [['51.03', 'Kabupaten Badung']],
   'kecamatan/51.03.json': [['51.03.01', 'Kuta']],
-  'desa/51.03.01.json': [['51.03.01.1001', 'Tuban', '80361']],
+  'desa/51.03.01.json': [['51.03.01.1001', 'Tuban', '80361'], ['51.03.01.1002', 'Kuta', '80361']],
+  'search/nasional.json': [['51', 'Bali'], ['51.03', 'Kabupaten Badung'], ['51.03.01', 'Kuta'], ['52', 'Nusa Tenggara Barat']],
+  'search/51.json': [['51.03.01.1001', 'Tuban'], ['51.03.01.1002', 'Kuta']],
+  'kodepos/80.json': { '80361': [['51.03.01.1001', 'Tuban'], ['51.03.01.1002', 'Kuta']] },
 };
 const makeClient = (fail = new Set<string>()) =>
   createWilayah({
@@ -84,5 +87,62 @@ describe('WilayahPicker', () => {
     await waitFor(() => expect(screen.getByTestId('provinsi').dataset.count).toBe('2'));
     await act(async () => { fireEvent.click(screen.getByTestId('provinsi')); });
     await waitFor(() => expect(screen.getByTestId('provinsi').textContent).toBe('51'));
+  });
+});
+
+describe('WilayahPicker mode="search"', () => {
+  const type = async (text: string) => {
+    await act(async () => { fireEvent.change(screen.getByRole('combobox'), { target: { value: text } }); });
+  };
+
+  it('searches as you type and picks with the keyboard', async () => {
+    const onChange = vi.fn();
+    render(<WilayahPicker client={makeClient()} mode="search" onChange={onChange} name="alamat" />);
+    const input = screen.getByRole('combobox');
+    expect(screen.getByRole('combobox', { name: 'Cari wilayah' })).toBe(input);
+
+    await type('kuta');
+    await waitFor(() => expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual(['Kuta, Badung, Bali', 'Kuta, Kuta, Badung, Bali']));
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+    expect(input.getAttribute('aria-activedescendant')).toBe(screen.getAllByRole('option')[0].id);
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(screen.getAllByRole('option')[1].getAttribute('aria-selected')).toBe('true');
+    await act(async () => { fireEvent.keyDown(input, { key: 'Enter' }); });
+
+    await waitFor(() => expect(onChange).toHaveBeenCalled());
+    const alamat = onChange.mock.lastCall![0];
+    expect([alamat.desa.nama, alamat.kodePos]).toEqual(['Kuta', '80361']);
+    expect(input).toHaveProperty('value', 'Kuta, Kuta, Badung, Bali');
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.getByLabelText('Kode Pos')).toHaveProperty('value', '80361');
+  });
+
+  it('finds desa by kode pos and lets the user choose with the mouse', async () => {
+    render(<WilayahPicker client={makeClient()} mode="search" />);
+    await type('80361');
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
+    await act(async () => { fireEvent.mouseDown(screen.getByText('Tuban, Kuta, Badung, Bali')); });
+    await waitFor(() => expect(screen.getByRole('combobox')).toHaveProperty('value', 'Tuban, Kuta, Badung, Bali'));
+  });
+
+  it('shows the saved value, announces no results, and restores on Escape', async () => {
+    render(<WilayahPicker client={makeClient()} mode="search" defaultValue="51.03" levels={2} />);
+    const input = screen.getByRole('combobox');
+    await waitFor(() => expect(input).toHaveProperty('value', 'Badung, Bali'));
+    await type('xyz');
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Wilayah tidak ditemukan'));
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(input).toHaveProperty('value', 'Badung, Bali');
+  });
+
+  it('reports a failed index load with retry', async () => {
+    const fail = new Set(['search/nasional.json']);
+    render(<WilayahPicker client={makeClient(fail)} mode="search" />);
+    await type('kuta');
+    expect((await screen.findByRole('alert')).textContent).toContain('offline');
+    fail.clear();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' })); });
+    await waitFor(() => expect(screen.getAllByRole('option').length).toBeGreaterThan(0));
   });
 });
