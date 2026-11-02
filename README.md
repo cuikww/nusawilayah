@@ -9,7 +9,8 @@
 **Indonesian region picker and region data.** Pick a provinsi → kabupaten/kota → kecamatan → desa/kelurahan and get its postal code, using the official **Kepmendagri No. 300.2.2-2430 Tahun 2025** data: 38 provinces, 514 regencies/cities, 7,285 districts and 83,762 villages.
 
 - **Drop-in React component**: cascading dropdowns or a single search box, with postal code.
-- **Tiny and fast**: about 6 KB gzipped of JavaScript. Data loads on demand from a CDN, under 1 KB per step.
+- **Tiny and fast**: about 5 KB gzipped of JavaScript, enforced in CI. Data loads on demand, under 1 KB per step, and can be cached in IndexedDB for offline repeat visits.
+- **Server rendering**: Next.js App Router pages can render the provinsi on the server.
 - **Search without a server**: type `denpasar sel`, `seminyak kuta`, the postal code `80361`, or a former name.
 - **Code changes handled**: `migrate()` maps addresses saved under the previous decree to the current codes.
 - **Accessible**: native `<select>` and an ARIA 1.2 combobox, tested with axe (WCAG 2.1 AA) in a real browser.
@@ -22,7 +23,7 @@
 | --- | --- |
 | ![Cascade mode: Bali, Kabupaten Badung, Kuta, Tuban, postal code 80361](docs/images/cascade.png) | ![Search mode: typing "denpasar" lists Kota Denpasar and its districts](docs/images/search.png) |
 
-Run it yourself: `pnpm install && pnpm build && pnpm --filter example-vite dev` (see [apps/example-vite](apps/example-vite)).
+**Try it in the [playground](https://cuikww.github.io/nusawilayah/)**, or run it yourself: `pnpm install && pnpm build && pnpm --filter docs dev`.
 
 ## Contents
 
@@ -30,7 +31,7 @@ Run it yourself: `pnpm install && pnpm build && pnpm --filter example-vite dev` 
 - [Quick start (React)](#quick-start-react)
 - [What you get back](#what-you-get-back)
 - [Component props](#component-props)
-- [Recipes](#recipes): forms, edit forms, React Hook Form, English labels, custom UI, styling, self-hosting
+- [Recipes](#recipes): forms, edit forms, React Hook Form, Formik, English labels, custom UI, styling, Next.js, self-hosting, offline
 - [Without React: `@nusawilayah/core`](#without-react-nusawilayahcore)
 - [Other languages: JSON, SQLite, CSV](#other-languages-json-sqlite-csv)
 - [Data, versions and sources](#data-versions-and-sources)
@@ -98,7 +99,9 @@ Prefer one search box? It accepts names and postal codes:
 | `level` | `provinsi`, `kabupaten`, `kecamatan` or `desa` |
 | `induk` | Parent kode |
 | `tipe` | `kabupaten` or `kota` at level 2, `desa` or `kelurahan` at level 4 |
-| `kodePos` | Postal code(s) of the desa; `alamat.kodePos` is the selected one |
+| `kodePos` | Postal code(s) of the desa; `alamat.kodePos` is the selected one, or the one the user typed |
+
+The postal code field is filled from the village data but stays editable: postal codes are best-effort, so users can correct them.
 
 **Tip:** save only `alamat.desa.kode` (e.g. `51.03.01.1001`) in your database. It contains the province, regency and district codes, and `defaultValue` restores the full picker from it.
 
@@ -117,7 +120,8 @@ Prefer one search box? It accepts names and postal codes:
 | `placeholder` | `Partial<Record<Level, string>>` | | Placeholder per level |
 | `labels` | `Partial<Labels>` | `labelsId` (Indonesian) | Every visible text; `labelsEn` for English |
 | `components` | `{ Field?: ComponentType<FieldProps> }` | native `<select>` | Your own field component |
-| `client` | `WilayahClient` | shared jsDelivr client | Self-hosted data or a custom fetcher |
+| `client` | `WilayahClient` | shared jsDelivr client | Self-hosted data, a custom fetcher, or the IndexedDB cache |
+| `initialProvinsi` | `Wilayah[]` | | Provinsi loaded on the server, so the first HTML has them ([Next.js](#nextjs-app-router-server-rendered-provinsi)) |
 | `className`, `id`, `onBlur`, `ref` | | | Passed to the wrapper, the inputs and the first input |
 
 ## Recipes
@@ -163,6 +167,17 @@ const { control, handleSubmit } = useForm<{ alamat: Alamat }>()
   rules={{ validate: (a) => !!a?.desa || 'Choose a village' }}
   render={({ field }) => <WilayahPicker {...field} />}
 />
+```
+
+### Formik
+
+```tsx
+import { useField } from 'formik'
+
+function AlamatField({ name }: { name: string }) {
+  const [field, , helpers] = useField<Alamat | null>(name)
+  return <WilayahPicker value={field.value} onChange={helpers.setValue} onBlur={() => helpers.setTouched(true)} />
+}
 ```
 
 ### English labels
@@ -216,7 +231,17 @@ const { levels, select, retry, alamat, kode } = useWilayah({ defaultValue: '51.0
 
 ### Styling
 
-The components ship no CSS. Style them with `className` and these attributes:
+The components ship no CSS by default. For a ready-made look, import the optional theme (44 px touch targets, focus rings, a dropdown list for search mode) and adjust its CSS variables:
+
+```ts
+import '@nusawilayah/react/style.css'
+```
+
+```css
+[data-nw-picker] { --nw-radius: 10px; --nw-focus: #16a34a; --nw-active-bg: #16a34a; }
+```
+
+Or style everything yourself with `className` and these attributes:
 
 | Selector | Element |
 | --- | --- |
@@ -239,9 +264,11 @@ The components ship no CSS. Style them with `className` and these attributes:
 By default the data comes from `https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/dist`. To serve it yourself (intranet, offline, strict CSP):
 
 ```sh
-npm install @nusawilayah/data
-cp -r node_modules/@nusawilayah/data/dist public/wilayah
+npm install -D @nusawilayah/data
+npx nusawilayah copy public/wilayah
 ```
+
+Add the copy to your build (`"prebuild": "nusawilayah copy public/wilayah"`) so the data follows the installed version. Run `npx nusawilayah` only where `@nusawilayah/data` is installed.
 
 ```tsx
 import { createWilayah } from '@nusawilayah/core'
@@ -250,7 +277,44 @@ const client = createWilayah({ baseUrl: '/wilayah' }) // create once, outside co
 <WilayahPicker client={client} />
 ```
 
-Next.js App Router: `WilayahPicker` is marked `"use client"`, so it can be used directly in a server component page.
+### Offline and repeat visits (IndexedDB)
+
+```ts
+const client = createWilayah({ cache: 'indexeddb' })
+```
+
+Every loaded file is also kept in IndexedDB for 7 days, so a returning visitor loads the picker without the network. Where IndexedDB is unavailable (private mode, server rendering) the client silently uses the memory cache.
+
+### Next.js App Router: server-rendered provinsi
+
+`WilayahPicker` is marked `"use client"`. To have the provinsi in the first HTML (no loading state, works before JavaScript runs), load them in a server component and pass them down:
+
+```tsx
+// app/page.tsx (server component)
+import { createWilayah } from '@nusawilayah/core'
+import { AddressForm } from './AddressForm'
+
+const server = createWilayah() // or a fetcher that reads the copied files from disk
+
+export default async function Page() {
+  return <AddressForm provinsi={await server.provinsi()} />
+}
+```
+
+```tsx
+// app/AddressForm.tsx
+'use client'
+import type { Wilayah } from '@nusawilayah/core'
+import { WilayahPicker } from '@nusawilayah/react'
+
+export function AddressForm({ provinsi }: { provinsi: Wilayah[] }) {
+  return <WilayahPicker initialProvinsi={provinsi} name="alamat" />
+}
+```
+
+A complete example, with self-hosted data and a plain form submit, is in [apps/example-next](apps/example-next).
+
+On a simulated mid-range phone (4x CPU slowdown, 4G at 150 ms), the provinsi are visible at first paint (0.6 s), the next dropdown fills in 0.4 s over the network and in 24 ms from the cache.
 
 ## Without React: `@nusawilayah/core`
 
@@ -433,8 +497,12 @@ pnpm install
 pnpm build                          # core, react, and the data pipeline (fails if validation fails)
 pnpm test                           # unit tests (vitest)
 pnpm typecheck
-pnpm --filter example-vite dev      # demo at http://localhost:5173, self-hosted data
+pnpm size                           # bundle budgets (size-limit)
+pnpm --filter docs dev              # docs + playground at http://localhost:5173, self-hosted data
 pnpm --filter example-vite e2e      # Playwright + axe in Chrome
+pnpm --filter docs e2e              # playground, IndexedDB cache, axe
+pnpm --filter example-next e2e      # Next.js production build: server rendering, form submit
+PERF=1 pnpm --filter example-next e2e perf         # load times on a simulated mid-range phone
 PREVIEW=1 pnpm --filter example-vite e2e preview   # regenerate docs/images
 ```
 
@@ -443,7 +511,9 @@ packages/core      headless client (wilayah.ts domain rules, loader.ts, search.t
 packages/react     WilayahPicker, useWilayah, DefaultField, SearchField
 packages/data      generated data (dist/ JSON, export/ SQLite + CSV)
 pipeline           download → validate → split → write; history.ts aliases + changes; export.ts SQLite + CSV
-apps/example-vite  demo and browser tests
+apps/docs          docs + playground (GitHub Pages)
+apps/example-vite  minimal demo and browser tests
+apps/example-next  Next.js App Router example (server-rendered provinsi)
 docs               PRD.md (requirements + status checklist), SPEC.md (data format), DECISIONS.md (why)
 ```
 

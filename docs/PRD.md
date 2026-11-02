@@ -6,33 +6,28 @@ Nov 2, 2026 · @kyky
 
 ## Status implementasi
 
-Per 2 November 2026: `@nusawilayah/core` 0.3.0, `@nusawilayah/react` 0.3.0, `@nusawilayah/data` 2025.2.3 terbit di npm (Trusted Publishing + provenance). Nama lama dan `migrate()` (core/react 0.4.0, data 2025.2.4) sudah di-commit, belum dirilis.
+Per 2 November 2026: `@nusawilayah/core` 0.3.0, `@nusawilayah/react` 0.3.0, `@nusawilayah/data` 2025.2.3 terbit di npm (Trusted Publishing + provenance). Semua pekerjaan v0.1 dan v0.2 di bawah sudah di-commit dan menunggu rilis berikutnya (core/react 0.4.0, data 2025.2.4).
 
 Legenda: `[x]` selesai · `[ ]` belum · 🟡 sebagian (penjelasan di catatan)
 
 | Fase | Status |
 | --- | --- |
-| v0.1 Fondasi | Selesai, kecuali situs docs + playground |
-| v0.2 Pencarian | Selesai, kecuali cache IndexedDB |
+| v0.1 Fondasi | Selesai. Tinggal **Gerbang 1** (dipakai di 1 proyek nyata), yang harus dijalankan pemilik proyek |
+| v0.2 Pencarian | Selesai, **Gerbang 2** lolos (axe + size-limit di CI) |
 | v0.3 Peta | Belum dimulai (menunggu Gerbang 3: asal data batas) |
 | v1.0 Stabil | Belum dimulai |
 
-**Belum dikerjakan, urut prioritas:**
+**Yang tersisa sebelum v0.3:**
 
 1. Gerbang 1: pakai picker di 1 proyek nyata
-2. `size-limit` di CI (syarat Gerbang 2)
-3. Cache IndexedDB (F2.2)
-4. Workflow bulanan cek sumber data + PR otomatis
-5. Kode pos bisa diubah pengguna (mitigasi risiko kode pos)
-6. Render provinsi dari server / RSC (F3.8)
-7. CLI `npx nusawilayah copy`
-8. Situs docs + playground, contoh Next.js
-9. Ukur waktu muat di HP kelas menengah
-10. Tanyakan asal data batas ke cahyadsn (Gerbang 3), lalu peta v0.3
+2. Aktifkan GitHub Pages (Settings → Pages → Source: GitHub Actions) agar situs docs terbit
+3. Tanyakan asal data batas ke cahyadsn (Gerbang 3)
+
+**Di luar fase v0.1/v0.2, belum dikerjakan:** workflow bulanan cek sumber data, pembanding idn-area-data, lint dan Storybook di CI, uji Next.js Pages Router, skor Lighthouse.
 
 ## Ringkasan
 
-Nusa Wilayah (nama sementara) adalah keluarga paket open source untuk memilih wilayah Indonesia lewat dropdown atau klik peta, memakai data resmi Kepmendagri No. 300.2.2-2430 Tahun 2025 (38 provinsi, 514 kabupaten/kota, 7.285 kecamatan, 83.762 desa/kelurahan).
+Nusa Wilayah adalah keluarga paket open source untuk memilih wilayah Indonesia lewat dropdown atau klik peta, memakai data resmi Kepmendagri No. 300.2.2-2430 Tahun 2025 (38 provinsi, 514 kabupaten/kota, 7.285 kecamatan, 83.762 desa/kelurahan).
 
 Masalahnya: hampir semua form alamat di aplikasi Indonesia butuh pilihan wilayah bertingkat, tetapi belum ada komponen siap pakai di npm. Developer membangunnya sendiri berulang kali, sering dengan data usang (34 provinsi) yang membuat halaman berat.
 
@@ -82,8 +77,8 @@ Tujuan utama: developer bisa memasang form alamat Indonesia yang lengkap dan cep
 | Metrik | Target | Status |
 | --- | --- | --- |
 | Unduhan npm paket React | 2.000/bulan | Diukur setelah v1.0 |
-| Ukuran awal yang dimuat (picker, gzip) | di bawah 15 KB kode + 2 KB data provinsi | ✅ core 4,0 KB + react 3,1 KB; provinsi 0,4 KB |
-| Waktu sampai dropdown provinsi tampil | di bawah 100 ms di HP kelas menengah | ⬜ belum diukur |
+| Ukuran awal yang dimuat (picker, gzip) | di bawah 15 KB kode + 2 KB data provinsi | ✅ 5,3 KB kode (diukur size-limit di CI) + 0,4 KB provinsi |
+| Waktu sampai dropdown provinsi tampil | di bawah 100 ms di HP kelas menengah | 🟡 diukur pada simulasi HP kelas menengah (CPU 4x lebih lambat, 4G 150 ms): dengan render server, provinsi sudah ada saat first paint (0,6 s sejak navigasi, dibatasi jaringan); dropdown berikutnya 24 ms dari cache, 0,4 s lewat jaringan |
 | Jeda pembaruan data setelah Kepmendagri baru terbit | maksimal 30 hari | ⬜ butuh workflow bulanan |
 | Kontributor selain pemilik proyek | minimal 3 | ⬜ |
 | Skor aksesibilitas (Lighthouse, halaman demo) | 100 | 🟡 axe WCAG 2.1 AA 0 pelanggaran; Lighthouse belum dijalankan |
@@ -105,7 +100,7 @@ Pengguna utama adalah developer web Indonesia yang membuat form alamat; pengguna
 - [x] Sebagai developer, saya memasang `<WilayahPicker />` dan langsung mendapat 4 dropdown bertingkat yang berfungsi.
 - [x] Sebagai developer, saya menerima hasil berupa kode dan nama wilayah plus kode pos, siap disimpan.
 - [x] Sebagai developer, saya bisa memuat ulang alamat tersimpan (dari kode desa) ke dalam picker untuk form edit.
-- [ ] 🟡 Sebagai developer, saya menyambungkan picker ke React Hook Form atau Formik tanpa kode tambahan yang rumit. — *Status:* React Hook Form didokumentasikan; Formik belum diuji
+- [x] Sebagai developer, saya menyambungkan picker ke React Hook Form atau Formik tanpa kode tambahan yang rumit. — *Status:* resep keduanya di README
 - [x] Sebagai developer, saya mengganti tampilan dengan class Tailwind atau komponen UI saya sendiri (shadcn/ui, MUI).
 - [x] Sebagai pembeli, saya mengetik "denpasar sel" dan langsung memilih Kecamatan Denpasar Selatan.
 - [x] Sebagai pembeli, saya mengisi kode pos dan wilayahnya terisi otomatis (atau saya memilih jika satu kode pos mencakup beberapa desa). — *Status:* lewat kolom pencarian (`mode="search"`)
@@ -136,7 +131,7 @@ Produk terdiri dari 5 paket dalam satu monorepo; v0.1 hanya merilis tiga paket p
 ### F2. Core (@nusawilayah/core)
 
 - [x] F2.1 `createWilayah({ baseUrl })`: membuat klien dengan sumber data CDN, folder lokal, atau fungsi fetch sendiri
-- [ ] 🟡 F2.2 Memuat anak wilayah sesuai pilihan (`children("51.03")`), dengan cache memori dan opsi cache IndexedDB — *Status:* cache memori selesai; IndexedDB belum
+- [x] F2.2 Memuat anak wilayah sesuai pilihan (`children("51.03")`), dengan cache memori dan opsi cache IndexedDB — *Status:* `createWilayah({ cache: 'indexeddb' })`, simpan 7 hari, diuji offline di Chrome
 - [x] F2.3 State machine bertingkat: memilih level atas mengosongkan level di bawahnya
 - [x] F2.4 `resolve("51.03.01.1001")`: mengisi semua level dari satu kode, untuk form edit
 - [x] F2.5 Pencarian: cocok awalan dan tanpa memperhatikan huruf besar, mengabaikan kata "Kabupaten", "Kota", "Kecamatan"; nama lama ikut dicari; seluruhnya di browser tanpa server; hasil menampilkan jalur lengkap ("Kuta, Badung, Bali") — *Status:* kata "Kota" sengaja **tidak** diabaikan agar Kota Bogor dan Kabupaten Bogor bisa dibedakan; nama lama ikut dicari (belum dirilis)
@@ -149,10 +144,10 @@ Produk terdiri dari 5 paket dalam satu monorepo; v0.1 hanya merilis tiga paket p
 - [x] F3.2 Props: value, defaultValue, onChange, levels (sampai level mana), required, disabled, placeholder per level
 - [x] F3.3 Kode pos otomatis terisi; jika satu kode pos mencakup beberapa desa, pengguna diminta memilih
 - [x] F3.4 Kompatibel dengan React Hook Form (Controller) dan form HTML biasa (hidden input bernama)
-- [ ] 🟡 F3.5 Tanpa gaya bawaan yang memaksa: mode unstyled + slot/render prop untuk memakai komponen UI sendiri; tema default opsional — *Status:* unstyled + `components.Field` selesai; tema default opsional belum
+- [x] F3.5 Tanpa gaya bawaan yang memaksa: mode unstyled + slot/render prop untuk memakai komponen UI sendiri; tema default opsional — *Status:* tema opsional `@nusawilayah/react/style.css` dengan variabel CSS `--nw-*`
 - [x] F3.6 Status loading, error, dan coba lagi per dropdown
 - [x] F3.7 Label dalam Bahasa Indonesia secara default, bisa diganti (mis. Inggris)
-- [ ] 🟡 F3.8 Mendukung React Server Components: komponen ditandai "use client", data provinsi bisa di-render dari server — *Status:* "use client" selesai; render provinsi dari server belum
+- [x] F3.8 Mendukung React Server Components: komponen ditandai "use client", data provinsi bisa di-render dari server — *Status:* prop `initialProvinsi`; diuji di `apps/example-next` (build produksi)
 
 ### F4. Peta (@nusawilayah/geo, @nusawilayah/map-react)
 
@@ -197,14 +192,14 @@ Batasan terpenting adalah ukuran: 83.762 desa tidak boleh pernah dimuat sekaligu
 
 | Area | Kebutuhan | Target | Status |
 | --- | --- | --- | --- |
-| Ukuran kode | core + react digabung, gzip | di bawah 15 KB | ✅ 7,1 KB (core 4,0 + react 3,1) |
+| Ukuran kode | core + react digabung, gzip | di bawah 15 KB | ✅ 5,3 KB, dijaga size-limit di CI |
 | Ukuran data per langkah | Satu file anak wilayah, gzip | di bawah 1 KB (terukur 0,2 KB rata-rata, lihat Pipeline data) | ✅ rata-rata 0,2 KB, terbesar 0,85 KB |
 | Indeks pencarian | Dimuat hanya saat mode search dipakai: indeks nasional sampai kecamatan + indeks desa per provinsi | nasional 57 KB; desa per provinsi rata-rata 17 KB, terbesar 62 KB (gzip, terukur) | ✅ nasional 57 KB; desa rata-rata 16 KB, terbesar 60 KB |
 | Peta | Peta seluruh Indonesia, level provinsi, gzip | di bawah 150 KB | ⬜ v0.3 |
-| Performa | Dropdown berikutnya terisi setelah memilih (data sudah di cache) | di bawah 50 ms | ⬜ belum diukur |
+| Performa | Dropdown berikutnya terisi setelah memilih (data sudah di cache) | di bawah 50 ms | ✅ 24 ms dengan CPU 4x lebih lambat |
 | Aksesibilitas | WCAG 2.1 AA: navigasi keyboard penuh, pola ARIA combobox, label terbaca screen reader | wajib | ✅ axe 0 pelanggaran di Chrome |
-| Mobile | Area sentuh minimal 44 px, bisa memakai `<select>` native di HP | wajib | 🟡 `<select>` native; 44 px diatur CSS pengguna (komponen tanpa gaya), contoh CSS di README |
-| Kompatibilitas | React 18 dan 19, Next.js App Router dan Pages Router, Vite | wajib | 🟡 diuji di React 19 + Vite; React 18 dan Next.js belum diuji |
+| Mobile | Area sentuh minimal 44 px, bisa memakai `<select>` native di HP | wajib | ✅ `<select>` native; tema opsional memakai area sentuh 44 px |
+| Kompatibilitas | React 18 dan 19, Next.js App Router dan Pages Router, Vite | wajib | 🟡 diuji di CI: React 18 dan 19, Vite, Next.js App Router; Pages Router belum diuji |
 | Modul | ESM + CJS, tree-shakeable, tipe TypeScript disertakan | wajib | ✅ |
 | Dependensi | core tanpa dependensi; react hanya peer dependency React | wajib | ✅ |
 | Bahasa | Indonesia default, Inggris tersedia | wajib | ✅ `labelsEn` |
@@ -236,7 +231,7 @@ nusawilayah/
     example-next/  contoh Next.js (uji e2e)
 ```
 
-*Status:* `core`, `react`, `data`, `pipeline` ada. `geo` dan `map-react` menunggu v0.3. Sebagai ganti `apps/docs` dan `apps/example-next`, saat ini ada `apps/example-vite` (demo + uji e2e) dan dokumentasi di README.
+*Status:* `core`, `react`, `data`, `pipeline`, `apps/docs` (docs + playground, GitHub Pages) dan `apps/example-next` ada, ditambah `apps/example-vite` (demo minimal + uji e2e). `geo` dan `map-react` menunggu v0.3.
 
 **Alur saat pengguna memilih wilayah**
 
@@ -246,7 +241,7 @@ nusawilayah/
 4. Pengguna memilih Tuban: kode pos 80361 terisi dari data desa, onChange mengirim objek Alamat lengkap.
 5. Kunjungan berikutnya: file yang sama diambil dari cache, tanpa jaringan.
 
-*Status:* langkah 1 sampai 4 berjalan (provinsi.json terukur 0,4 KB; render dari server belum). Langkah 5 bergantung pada cache HTTP browser/CDN; cache IndexedDB belum.
+*Status:* semua langkah berjalan. provinsi.json terukur 0,4 KB atau di-render dari server (`initialProvinsi`); kunjungan berikutnya memakai cache IndexedDB (`cache: 'indexeddb'`).
 
 ## Pipeline data
 
@@ -361,7 +356,7 @@ picker.select('provinsi', '51')    // mengosongkan level di bawahnya
 picker.subscribe(state => { /* untuk adapter framework */ })
 ```
 
-*Status:* semua ada kecuali opsi `cache: 'indexeddb'`. Tambahan: `fetcher`, `migrate(kode)`, `cascade.setValue/retry`.
+*Status:* semua ada. Tambahan: `fetcher`, `migrate(kode)`, `cascade.setValue/setKodePos/retry`, `createCascade({ initialProvinsi })`.
 
 ### React
 
@@ -403,7 +398,7 @@ Kode dan data dipisah: kode dipasang lewat npm dan masuk bundle, sedangkan data 
 | Mode | Cara kerja | Cocok untuk | Kekurangan | Status |
 | --- | --- | --- | --- | --- |
 | CDN (default) | Klien mengambil JSON dari jsDelivr, versi data dikunci di URL | Pasang cepat, situs publik | Butuh internet, bergantung pada CDN pihak ketiga | ✅ |
-| Self-host | CLI `npx nusawilayah copy public/wilayah` menyalin data ke folder statis | Aplikasi produksi, kontrol penuh, tanpa pihak ketiga | Satu langkah build tambahan | 🟡 berjalan dengan salin manual `node_modules/@nusawilayah/data/dist`; CLI belum |
+| Self-host | CLI `npx nusawilayah copy public/wilayah` menyalin data ke folder statis | Aplikasi produksi, kontrol penuh, tanpa pihak ketiga | Satu langkah build tambahan | ✅ CLI ada di `@nusawilayah/data` (jalankan setelah paket itu di-install) |
 | Fetch kustom | Developer memberi fungsi fetcher sendiri (API backend, bundle lokal, React Native) | Aplikasi internal, offline, mobile | Developer mengatur sendiri | ✅ |
 
 Versi data memakai format TAHUN.REVISI, terpisah dari versi kode: @nusawilayah/data@2025.2 = Kepmendagri 2025, revisi kedua (No. 300.2.2-2430). Kode core menerima data versi mana pun selama skema sama, jadi pembaruan data tidak memaksa upgrade kode. *Status:* ✅ (`TAHUN.REVISI.patch`).
@@ -419,7 +414,7 @@ File hasil konversi tidak disimpan di repo git; git hanya menyimpan skrip pipeli
 | npm (utama) | TopoJSON per provinsi, dipecah per level: @nusawilayah/geo-provinsi, geo-kabupaten, geo-kecamatan | Gratis; developer hanya memasang level yang dibutuhkan | ⬜ v0.3 |
 | CDN jsDelivr / unpkg (otomatis) | File yang sama, langsung dari npm | Tanpa server sendiri, gratis, cepat di Indonesia | ✅ untuk data wilayah |
 | GitHub Releases | .zip SVG + GeoJSON siap unduh per level, plus SQLite dan CSV data wilayah | Untuk non-programmer, yang hanya butuh gambar, dan developer bahasa selain JavaScript | 🟡 SQLite dan CSV disajikan lewat npm/jsDelivr (`export/`), belum sebagai .zip di GitHub Releases |
-| Server developer (opsional) | Salinan lewat `npx nusawilayah copy` | Untuk aplikasi yang tidak boleh bergantung pada CDN | 🟡 salin manual; CLI belum |
+| Server developer (opsional) | Salinan lewat `npx nusawilayah copy` | Untuk aplikasi yang tidak boleh bergantung pada CDN | ✅ |
 
 Level desa (187 MB data mentah) ditunda: berat dan jarang dibutuhkan. Jika kelak dibuat, disimpan di Cloudflare R2, bukan npm.
 
@@ -439,12 +434,12 @@ Setiap rilis data wajib lolos uji integritas otomatis; rilis kode wajib lolos uj
 - [x] Unit test core dengan Vitest: cascade, resolve, search, kode pos, cache
 - [x] Uji komponen dengan Testing Library: keyboard, onChange, form edit, loading/error
 - [x] Aksesibilitas otomatis dengan axe-core di Storybook — *Status:* axe-core dijalankan lewat Playwright di aplikasi contoh, bukan Storybook
-- [ ] Batas ukuran bundle dengan size-limit; PR gagal jika melewati target
-- [ ] 🟡 Uji end-to-end dengan Playwright di aplikasi contoh Next.js dan Vite — *Status:* Vite selesai; Next.js belum
+- [x] Batas ukuran bundle dengan size-limit; PR gagal jika melewati target — *Status:* `.size-limit.json`, langkah `pnpm size` di CI
+- [x] Uji end-to-end dengan Playwright di aplikasi contoh Next.js dan Vite — *Status:* `example-vite`, `example-next` (build produksi), dan `docs`
 
 **CI/CD (GitHub Actions)**
 
-- [ ] 🟡 Setiap PR: lint, typecheck, test, size-limit, build Storybook preview — *Status:* typecheck, test, build data, dan e2e jalan; lint, size-limit, dan Storybook belum
+- [ ] 🟡 Setiap PR: lint, typecheck, test, size-limit, build Storybook preview — *Status:* typecheck, test (termasuk React 18), size-limit, build data, dan e2e jalan; lint dan Storybook belum (playground di `apps/docs` mengambil peran preview)
 - [x] Rilis kode: Changesets untuk versi dan changelog per paket, publish ke npm dengan provenance — *Status:* lewat npm Trusted Publishing (OIDC), tanpa token
 - [ ] Rilis data: workflow bulanan mengecek apakah sumber data berubah; jika ya, membuka PR otomatis berisi data baru + changes.json untuk ditinjau manusia
 
@@ -482,7 +477,7 @@ SQLite, CSV, dan SPEC.md ikut dirilis sejak v0.1 karena hanya keluaran tambahan 
 - [x] pipeline data
 - [x] core: cascade, resolve
 - [x] React mode cascade
-- [ ] 🟡 docs + playground — *Status:* dokumentasi lengkap di README dan SPEC.md, demo di `apps/example-vite`; situs docs + playground belum
+- [x] docs + playground — *Status:* `apps/docs`, deploy ke GitHub Pages lewat workflow Docs (aktifkan Pages: Source = GitHub Actions)
 - [ ] **Gerbang 1:** dipakai di 1 proyek nyata
 
 **v0.2 Pencarian (minggu 4 sampai 5)**
@@ -490,8 +485,8 @@ SQLite, CSV, dan SPEC.md ikut dirilis sejak v0.1 karena hanya keluaran tambahan 
 - [x] mode search
 - [x] kode pos otomatis
 - [x] React Hook Form
-- [ ] cache IndexedDB
-- [ ] 🟡 **Gerbang 2:** lolos axe + size-limit — *Status:* axe lolos; size-limit belum dipasang (ukuran saat ini 7,1 KB, di bawah target 15 KB)
+- [x] cache IndexedDB
+- [x] **Gerbang 2:** lolos axe + size-limit — *Status:* axe 0 pelanggaran di 3 aplikasi; size-limit 5,3 KB dari batas 15 KB
 
 **v0.3 Peta (minggu 6 sampai 9)**
 
@@ -514,7 +509,7 @@ SQLite, CSV, dan SPEC.md ikut dirilis sejak v0.1 karena hanya keluaran tambahan 
 - [x] Setup monorepo pnpm + Turborepo + Changesets
 - [x] Tulis pipeline: baca wilayah.sql dan wilayah_kodepos, validasi jumlah, tulis file JSON
 - [x] Unit test validasi data di CI
-- [ ] 🟡 Prototipe core.children() dan ukur waktu muat di HP — *Status:* `children()` selesai; waktu muat di HP belum diukur
+- [x] Prototipe core.children() dan ukur waktu muat di HP — *Status:* diukur pada simulasi HP kelas menengah (`PERF=1 pnpm --filter example-next e2e perf`), hasil di bagian Metrik
 
 ## Risiko & keputusan
 
@@ -524,7 +519,7 @@ Risiko terbesar adalah ketergantungan pada satu sumber data yang dirawat satu or
 | --- | --- | --- | --- | --- |
 | Sumber data berhenti diperbarui | Sedang | Tinggi | Adapter sumber yang bisa ditukar; bisa membaca lampiran Kepmendagri langsung sebagai cadangan | 🟡 sumber dipin per commit dan parser terpisah dari validasi; adapter sumber kedua belum |
 | Kepmendagri baru mengubah atau menghapus kode | Pasti terjadi | Sedang | changes.json per rilis + fungsi migrasi alamat tersimpan | ✅ `changes.json` + `migrate()` (belum dirilis) |
-| Kode pos tidak akurat (satu kode pos banyak desa, atau sebaliknya) | Tinggi | Sedang | Kode pos sebagai saran yang bisa diubah pengguna, bukan nilai wajib | ⬜ kolom kode pos masih read-only |
+| Kode pos tidak akurat (satu kode pos banyak desa, atau sebaliknya) | Tinggi | Sedang | Kode pos sebagai saran yang bisa diubah pengguna, bukan nilai wajib | ✅ kolom kode pos terisi otomatis tapi bisa diubah |
 | Peta terlalu berat di HP | Sedang | Sedang | Tiga tingkat kehalusan garis, file per provinsi, uji ukuran di CI | ⬜ v0.3 |
 | Sengketa batas wilayah | Rendah | Tinggi | Penafian "bukan batas hukum", ikuti versi Kemendagri tanpa penilaian sendiri | ⬜ v0.3 |
 | CDN jsDelivr lambat atau diblokir | Rendah | Sedang | Mode self-host dan fetch kustom sejak v0.1 | ✅ |

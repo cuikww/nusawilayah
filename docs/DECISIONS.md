@@ -106,10 +106,30 @@ Names are stored as official names, including the "Kabupaten"/"Kota" prefix.
 
 **SQLite and CSV get `alias` and `perubahan`** so non-JS users can search former names and migrate in SQL.
 
+## 2026-11-02: Completing v0.1 and v0.2 (PRD roadmap, Gate 2)
+
+**IndexedDB cache (F2.2)** is a `Store` (get/set) behind the existing fetcher, opt-in with `cache: 'indexeddb'`. Entries expire after 7 days (data patches never change a kode or nama, so a week-old file is still correct) and are namespaced by `baseUrl` so different data sources never mix. The store is only a cache: if IndexedDB fails or is missing (private mode, SSR), the client fetches as before. Tested in real Chrome by blocking the data requests on a reload.
+
+**Server-rendered provinsi (F3.8)** via `initialProvinsi`: the cascade starts with those options and never fetches level 1, so `useSyncExternalStore`'s server snapshot already contains them. Verified in a Next.js production build: the HTML contains all 38 `<option>`s.
+
+**Postal code is editable** (PRD risk: inaccurate postal codes). `cascade.setKodePos` overrides the derived value until the selection changes; the React field strips non-digits and caps at 5.
+
+**Optional theme** `@nusawilayah/react/style.css`, scoped to `[data-nw-picker]` and driven by `--nw-*` variables. The component stays unstyled unless it is imported (`sideEffects: ["*.css"]` keeps bundlers from dropping it).
+
+**`npx nusawilayah copy <folder>`** is a bin of `@nusawilayah/data`, not a separate `nusawilayah` package: it copies the exact installed data version, and a new unscoped package could not be published through Trusted Publishing without a token first. `npx nusawilayah` therefore needs `@nusawilayah/data` installed; otherwise npx would look up an unrelated `nusawilayah` package on npm. Reserving that name on npm is worth doing.
+
+**size-limit (Gate 2)** with gzip, as the PRD measures: core 3.3 KB, react alone 2.5 KB, `import { WilayahPicker }` with core 5.3 KB (limit 15 KB).
+
+**React 18** is tested in CI by installing React 18 into the react package as the last CI step, instead of a second copy of the test setup.
+
+**Docs + playground** in `apps/docs` (Vite), deployed to GitHub Pages by the Docs workflow with the data self-hosted next to the site, so the playground always shows the repo's data. It replaces a separate Storybook for now.
+
+**`apps/example-next`** (App Router, production build in e2e) covers server rendering, `nusawilayah copy` as a build step, and a plain `<form method="get">` submit.
+
+**Measured on a simulated mid-range phone** (4x CPU slowdown, 4G with 150 ms latency, Next.js production build): provinsi visible at first paint (0.6 s from navigation, network-bound), hydrated at 2.4 s (mostly the Next.js runtime), next dropdown 0.4 s over the network and 24 ms from cache. The PRD's "< 100 ms to the provinsi dropdown" is met only in the sense that server rendering adds no wait after first paint; from navigation start it is bound by the network.
+
 ## Not done yet
 
-- core: IndexedDB cache
 - monthly workflow that checks the source and opens a data PR (PRD)
-- React: server-rendered provinsi (RSC)
-- CLI `npx nusawilayah copy`
-- load time on a mid-range phone
+- Gate 1: use the picker in a real project
+- idn-area-data name comparison, lint and Storybook in CI, Next.js Pages Router test, Lighthouse score
