@@ -74,6 +74,8 @@ Nama disimpan sesuai nama resmi, termasuk awalan "Kabupaten"/"Kota".
 
 **Keputusan:** workflow Release dipecah. changesets/action hanya membuat PR versi, lalu step terpisah menjalankan `pnpm release` dengan npm terbaru, `id-token: write`, `NPM_CONFIG_PROVENANCE=true`, dan **tanpa token sama sekali**. Kalau trusted publisher belum diatur di npm, publish gagal dengan jelas, tidak diam-diam memakai token.
 
+**Terverifikasi** di rilis core/react 0.2.1 dan data 2025.2.2: ketiganya terbit lewat trusted publisher GitHub dengan provenance. Token npm sudah tidak dipakai, dan publishing access setiap paket menolak token.
+
 ## Belum dikerjakan
 
 - core: cache IndexedDB, alias nama lama di pencarian
