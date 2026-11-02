@@ -15,10 +15,15 @@ export interface SearchResult {
   wilayah: Wilayah;
   /** Full path for display, e.g. 'Kuta, Badung, Bali'. */
   label: string;
+  /** Set when the query matched a former name of the wilayah rather than its current name. */
+  alias?: string;
 }
 
-type Row = [kode: string, nama: string];
-interface Entry { kode: string; nama: string; words: string[]; norm: string; bare: string }
+/** Search index row: the current name followed by former names. */
+type Row = [kode: string, nama: string, ...alias: string[]];
+/** One searchable name: forms[0] is the current name, the rest are former names. */
+interface Form { text: string; norm: string; bare: string; words: string[] }
+interface Entry { kode: string; nama: string; forms: Form[]; allWords: string[] }
 
 // Level words are ignored in queries (PRD). "kota" is kept: it tells Kota Bogor from Kabupaten Bogor.
 const STOP = new Set(['kabupaten', 'kab', 'kecamatan', 'kec', 'desa', 'kelurahan', 'kel', 'provinsi', 'prov']);
@@ -28,9 +33,14 @@ const MAX_DESA_PROVINSI = 3;
 export const normalize = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ'`’]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
-const toEntry = ([kode, nama]: Row): Entry => {
-  const norm = normalize(displayName(nama));
-  return { kode, nama, norm, bare: norm.replace(/^kota /, ''), words: norm.split(' ') };
+const toForm = (text: string): Form => {
+  const norm = normalize(displayName(text));
+  return { text, norm, bare: norm.replace(/^kota /, ''), words: norm.split(' ') };
+};
+
+const toEntry = ([kode, nama, ...alias]: Row): Entry => {
+  const forms = [nama, ...alias].map(toForm);
+  return { kode, nama, forms, allWords: forms.flatMap((f) => f.words) };
 };
 
 const hits = (token: string, words: string[]) => words.some((w) => w.startsWith(token));
@@ -78,30 +88,48 @@ export function createSearch(
     const joined = tokens.join(' ');
     const inScope = (kode: string) => !provinsi || provinsi.includes(kode.slice(0, 2));
 
-    // A match: every token prefixes a word of the name or its parents, and at least one prefixes the name itself.
-    const matches = (e: Entry) => {
-      if (!tokens.some((t) => hits(t, e.words))) return false;
-      const parentWords = ancestors(e.kode).flatMap((a) => a.words);
-      return tokens.every((t) => hits(t, e.words) || hits(t, parentWords));
-    };
-    const score = (e: Entry) =>
-      (e.norm === joined || e.bare === joined ? 0 : e.norm.startsWith(joined) || e.bare.startsWith(joined) ? 1 : 2) * 10 + e.kode.split('.').length;
-    type Ranked = readonly [number, Entry];
-    const cmp = (a: Ranked, b: Ranked) => a[0] - b[0] || a[1].nama.length - b[1].nama.length;
-    const rank = (list: Entry[]) => list.map((e): Ranked => [score(e), e]).sort(cmp);
-
     const depth = (e: Entry) => e.kode.split('.').length;
-    let found = rank(entries.filter((e) => depth(e) <= levels && inScope(e.kode) && matches(e)));
+    const score = (f: Form, e: Entry) =>
+      (f.norm === joined || f.bare === joined ? 0 : f.norm.startsWith(joined) || f.bare.startsWith(joined) ? 1 : 2) * 10 + depth(e);
+
+    // A name matches when every token prefixes a word of that name or of the parents (current or former names),
+    // and at least one token prefixes the name itself. The best-scoring matching name wins; ties go to the current name.
+    type Ranked = readonly [score: number, entry: Entry, form: number];
+    const best = (e: Entry): Ranked | undefined => {
+      let parentWords: string[] | undefined;
+      let top: Ranked | undefined;
+      e.forms.forEach((f, i) => {
+        if (!tokens.some((t) => hits(t, f.words))) return;
+        parentWords ??= ancestors(e.kode).flatMap((a) => a.allWords);
+        if (!tokens.every((t) => hits(t, f.words) || hits(t, parentWords!))) return;
+        const s = score(f, e);
+        if (!top || s < top[0]) top = [s, e, i];
+      });
+      return top;
+    };
+    const cmp = (a: Ranked, b: Ranked) => a[0] - b[0] || a[2] - b[2] || a[1].nama.length - b[1].nama.length;
+    const rank = (list: Entry[]) => list.map(best).filter((r): r is Ranked => r !== undefined).sort(cmp);
+
+    let found = rank(entries.filter((e) => depth(e) <= levels && inScope(e.kode)));
 
     if (levels >= 4) {
       // Provinsi whose desa index is worth loading: the scope, or where any token names a wilayah.
       const provs = provinsi ?? [
-        ...new Set(rank(entries.filter((e) => tokens.some((t) => hits(t, e.words)))).map(([, e]) => e.kode.slice(0, 2))),
+        ...new Set(
+          entries
+            .flatMap((e) => (tokens.some((t) => hits(t, e.allWords)) ? [[score(e.forms[0], e), e] as const] : []))
+            .sort((a, b) => a[0] - b[0])
+            .map(([, e]) => e.kode.slice(0, 2)),
+        ),
       ].slice(0, MAX_DESA_PROVINSI);
       const desaEntries = (await Promise.all(provs.map(loadDesa))).flat();
-      found = [...found, ...rank(desaEntries.filter(matches))].sort(cmp);
+      found = [...found, ...rank(desaEntries)].sort(cmp);
     }
 
-    return found.slice(0, limit).map(([, e]) => ({ wilayah: toWilayah([e.kode, e.nama]), label: label(e) }));
+    return found.slice(0, limit).map(([, e, form]) => {
+      const result: SearchResult = { wilayah: toWilayah([e.kode, e.nama]), label: label(e) };
+      if (form > 0) result.alias = e.forms[form].text;
+      return result;
+    });
   };
 }

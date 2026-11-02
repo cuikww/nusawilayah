@@ -6,7 +6,7 @@ const files: Record<string, unknown> = {
   'search/nasional.json': [
     ['32', 'Jawa Barat'], ['32.01', 'Kabupaten Bogor'], ['32.71', 'Kota Bogor'], ['32.71.01', 'Bogor Selatan'],
     ['51', 'Bali'], ['51.03', 'Kabupaten Badung'], ['51.03.01', 'Kuta'], ['51.03.02', 'Kuta Selatan'],
-    ['51.71', 'Kota Denpasar'], ['51.71.01', 'Denpasar Selatan'],
+    ['51.71', 'Kota Denpasar'], ['51.71.01', 'Denpasar Selatan'], ['51.03.06', 'Mengwi', 'Mengui Lama'],
   ],
   'search/51.json': [['51.03.01.1001', 'Tuban'], ['51.03.01.1005', 'Seminyak'], ['51.03.01.1002', 'Kuta']],
   'search/32.json': [['32.71.01.1001', "Ba'u"]],
@@ -48,6 +48,12 @@ describe('search', () => {
     expect(await labels('bau', { provinsi: ['32'] })).toEqual(["Ba'u, Bogor Selatan, Kota Bogor, Jawa Barat"]);
     expect(await labels('kecamatan')).toEqual([]);
     expect(await labels('xyz')).toEqual([]);
+  });
+
+  it('matches former names and says which one matched', async () => {
+    const [r] = await make().w.search('mengui');
+    expect(r).toMatchObject({ label: 'Mengwi, Badung, Bali', alias: 'Mengui Lama', wilayah: { kode: '51.03.06', nama: 'Mengwi' } });
+    expect((await make().w.search('mengwi'))[0].alias).toBeUndefined();
   });
 
   it('treats 5 digits as a kode pos', async () => {

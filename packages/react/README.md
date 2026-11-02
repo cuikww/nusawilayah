@@ -14,7 +14,7 @@ import { WilayahPicker } from '@nusawilayah/react'
 // four cascading dropdowns
 <WilayahPicker onChange={(alamat) => save(alamat)} />
 
-// one search box: "denpasar sel", "seminyak kuta" or the postal code "80361"
+// one search box: "denpasar sel", "seminyak kuta", the postal code "80361" or a former name
 <WilayahPicker mode="search" onChange={(alamat) => save(alamat)} />
 ```
 

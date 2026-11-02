@@ -10,6 +10,8 @@ export interface Labels extends Record<Level, string> {
   search: string;
   searchPlaceholder: string;
   noResults: string;
+  /** Shown after a search result found through a former name; `{nama}` is that name. */
+  formerly: string;
 }
 
 /** Indonesian labels (default). */
@@ -25,6 +27,7 @@ export const labelsId: Labels = {
   search: 'Cari wilayah',
   searchPlaceholder: 'Ketik nama wilayah atau kode pos',
   noResults: 'Wilayah tidak ditemukan',
+  formerly: 'dulu {nama}',
 };
 
 /** English labels. */
@@ -40,4 +43,5 @@ export const labelsEn: Labels = {
   search: 'Search region',
   searchPlaceholder: 'Type a region name or postal code',
   noResults: 'No region found',
+  formerly: 'formerly {nama}',
 };

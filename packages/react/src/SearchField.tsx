@@ -92,6 +92,7 @@ export function SearchField({ id, client, options, labels, current, onPick, onBl
             onMouseEnter={() => setActive(i)}
           >
             {r.label}
+            {r.alias && <span data-nw-alias> ({labels.formerly.replace('{nama}', r.alias)})</span>}
           </li>
         ))}
       </ul>

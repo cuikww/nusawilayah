@@ -8,7 +8,7 @@ const files: Record<string, unknown> = {
   'kabupaten/51.json': [['51.03', 'Kabupaten Badung']],
   'kecamatan/51.03.json': [['51.03.01', 'Kuta']],
   'desa/51.03.01.json': [['51.03.01.1001', 'Tuban', '80361'], ['51.03.01.1002', 'Kuta', '80361']],
-  'search/nasional.json': [['51', 'Bali'], ['51.03', 'Kabupaten Badung'], ['51.03.01', 'Kuta'], ['52', 'Nusa Tenggara Barat']],
+  'search/nasional.json': [['51', 'Bali'], ['51.03', 'Kabupaten Badung'], ['51.03.01', 'Kuta'], ['51.03.06', 'Mengwi', 'Mengui'], ['52', 'Nusa Tenggara Barat']],
   'search/51.json': [['51.03.01.1001', 'Tuban'], ['51.03.01.1002', 'Kuta']],
   'kodepos/80.json': { '80361': [['51.03.01.1001', 'Tuban'], ['51.03.01.1002', 'Kuta']] },
 };
@@ -116,6 +116,12 @@ describe('WilayahPicker mode="search"', () => {
     expect(input).toHaveProperty('value', 'Kuta, Kuta, Badung, Bali');
     expect(input.getAttribute('aria-expanded')).toBe('false');
     expect(screen.getByLabelText('Kode Pos')).toHaveProperty('value', '80361');
+  });
+
+  it('shows the former name a result was found by', async () => {
+    render(<WilayahPicker client={makeClient()} mode="search" labels={labelsEn} />);
+    await type('mengui');
+    await waitFor(() => expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual(['Mengwi, Badung, Bali (formerly Mengui)']));
   });
 
   it('finds desa by kode pos and lets the user choose with the mouse', async () => {

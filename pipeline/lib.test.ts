@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { toCsv, toRecords, writeSqlite } from './export.ts';
+import { aliases, diff, tidyName } from './history.ts';
 import { parseTuples, split, validate } from './lib.ts';
 
 describe('parseTuples', () => {
@@ -52,10 +53,15 @@ describe('split', () => {
 describe('exports', () => {
   const rows: [string, string][] = [['51', 'Bali'], ['51.03', 'Kabupaten Badung'], ['51.03.01', 'Kuta'], ['51.03.01.1001', 'Tuban'], ['51.03.01.2099', 'Desa "Uji", Satu']];
   const pos = new Map([['51.03.01.1001', '80361'], ['51.03.01.2099', '80362']]);
-  const records = toRecords(rows, pos);
+  const previous: [string, string][] = [['51', 'BALI'], ['51.03', 'KAB. BADUNG'], ['51.03.01', 'Kuta'], ['51.03.01.1001', 'Tubanx'], ['51.03.02.2001', 'Ungasan']];
+  const data = {
+    records: toRecords(rows, pos),
+    alias: aliases(rows, [previous]),
+    changes: diff(previous, rows, 'lama', 'baru'),
+  };
 
   it('writes one CSV per level with level-specific columns and RFC 4180 quoting', () => {
-    const csv = toCsv(records);
+    const csv = toCsv(data);
     expect(csv.get('csv/provinsi.csv')).toBe('kode,nama\n51,Bali\n');
     expect(csv.get('csv/kabupaten.csv')).toBe('kode,induk,nama,tipe\n51.03,51,Kabupaten Badung,kabupaten\n');
     expect(csv.get('csv/desa.csv')).toBe(
@@ -65,7 +71,7 @@ describe('exports', () => {
 
   it('writes a queryable SQLite database', () => {
     const file = join(mkdtempSync(join(tmpdir(), 'nw-')), 'test.sqlite');
-    writeSqlite(file, records, { versi: '0.0.0' });
+    writeSqlite(file, data, { versi: '0.0.0' });
     const db = new DatabaseSync(file, { readOnly: true });
     expect(db.prepare('SELECT kode, nama FROM wilayah WHERE induk = ? ORDER BY kode').all('51.03.01')).toEqual([
       { kode: '51.03.01.1001', nama: 'Tuban' },
@@ -73,6 +79,30 @@ describe('exports', () => {
     ]);
     expect(db.prepare('SELECT level, tipe, induk FROM wilayah WHERE kode_pos = ?').get('80361')).toEqual({ level: 'desa', tipe: 'kelurahan', induk: '51.03.01' });
     expect(db.prepare("SELECT value FROM meta WHERE key = 'versi'").get()).toEqual({ value: '0.0.0' });
+    expect(db.prepare('SELECT nama FROM alias WHERE kode = ?').all('51.03.01.1001')).toEqual([{ nama: 'Tubanx' }]);
+    expect(db.prepare("SELECT kode_lama FROM perubahan WHERE jenis = 'dihapus'").all()).toEqual([{ kode_lama: '51.03.02.2001' }]);
     db.close();
+  });
+});
+
+describe('history', () => {
+  const current: [string, string][] = [['51', 'Bali'], ['51.03', 'Kabupaten Badung'], ['51.03.01', 'Kuta'], ['51.03.01.1001', 'Pasie Raja'], ['51.03.05.2009', 'Cemagi'], ['51.03.01.2003', 'Baru']];
+  const old: [string, string][] = [['51', 'BALI'], ['51.03', 'KAB. BADUNG'], ['51.03.01', 'Kuta'], ['51.03.01.1001', 'Pasi Raja'], ['51.03.06.2001', 'Cemagi'], ['51.03.01.2002', 'Hilang']];
+
+  it('treats case and abbreviations as the same name', () => {
+    expect(aliases(current, [old])).toEqual(new Map([['51.03.01.1001', ['Pasi Raja']]]));
+    expect(tidyName('KAB. ACEH SELATAN')).toBe('Kabupaten Aceh Selatan');
+    expect(tidyName('Pasi Raja')).toBe('Pasi Raja');
+  });
+
+  it('diffs editions into renamed, moved, removed and new', () => {
+    expect(diff(old, current, 'a', 'b')).toEqual({
+      dari: 'a',
+      ke: 'b',
+      gantiNama: [['51.03.01.1001', 'Pasi Raja', 'Pasie Raja']],
+      pindah: [['51.03.06.2001', '51.03.05.2009', 'Cemagi']],
+      dihapus: [['51.03.01.2002', 'Hilang']],
+      baru: [['51.03.01.2003', 'Baru']],
+    });
   });
 });

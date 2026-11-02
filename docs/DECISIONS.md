@@ -92,10 +92,24 @@ Names are stored as official names, including the "Kabupaten"/"Kota" prefix.
 
 **English for code, errors and docs.** UI labels stay Indonesian by default (`labelsEn` exists), and the data keeps the official Indonesian terms (`kode`, `nama`, `provinsi`, ...), explained in the SPEC glossary.
 
+## 2026-11-02: Former names and changes.json (PRD F1.2, F2.5, data change risk)
+
+**Source: cahyadsn `db/archive`, compared per kode.** As the PRD planned, former names come from the 2022 and 2023 archives in the same repo, pinned to the same commit. `wilayah_2023.sql` is Kepmendagri No. 100.1.1-6117 Tahun 2022 (per its header) and is the previous edition for `changes.json`. The 2016-2020 archives are older Permendagri editions and are left out; 2016 also uses another dump format.
+
+**Name identity:** lowercase, no accents, punctuation or spaces, no leading `Kab.`/`Kabupaten`. Without it, every archive kabupaten (`KAB. ACEH SELATAN`) would count as renamed. Real renames found: 776 since the previous edition (mostly spelling, e.g. Pasi Raja → Pasie Raja, STM Hilir → Sinembah Tanjung Muda Hilir), 1,438 former names in total.
+
+**Moves are matched by name within the provinsi and level, and only when the match is unique** (90 since the previous edition, mostly villages moved to a new kecamatan). A move that also changed the name is reported as removed + new; guessing would be worse than asking the user again.
+
+**Aliases only in the search indexes** (`[kode, nama, ...formerNames]`), not in the per-step files: only search needs them, and older clients ignore extra tuple elements, so data `2025.2.4` stays a patch. Search tries every name of an entry, scores the best one, and prefers the current name on a tie. `SearchResult.alias` says which former name matched, and the React picker shows it ("dulu Johan Pahwalan").
+
+**`migrate(kode)` in core** loads `changes.json` (27 KB gzip) on first use only. It returns `unknown` for a kode in neither edition and rethrows network errors, so an outage is never mistaken for a removed address. `resolve` now throws its "not found" error with `status: 404` so callers can tell it apart from network errors.
+
+**SQLite and CSV get `alias` and `perubahan`** so non-JS users can search former names and migrate in SQL.
+
 ## Not done yet
 
-- core: IndexedDB cache, old-name aliases in search
+- core: IndexedDB cache
+- monthly workflow that checks the source and opens a data PR (PRD)
 - React: server-rendered provinsi (RSC)
 - CLI `npx nusawilayah copy`
-- `changes.json` between data releases
 - load time on a mid-range phone

@@ -10,7 +10,8 @@
 
 - **Drop-in React component**: cascading dropdowns or a single search box, with postal code.
 - **Tiny and fast**: about 6 KB gzipped of JavaScript. Data loads on demand from a CDN, under 1 KB per step.
-- **Search without a server**: type `denpasar sel`, `seminyak kuta` or the postal code `80361`.
+- **Search without a server**: type `denpasar sel`, `seminyak kuta`, the postal code `80361`, or a former name.
+- **Code changes handled**: `migrate()` maps addresses saved under the previous decree to the current codes.
 - **Accessible**: native `<select>` and an ARIA 1.2 combobox, tested with axe (WCAG 2.1 AA) in a real browser.
 - **Any stack**: a headless core for any framework, plus JSON, **SQLite** and **CSV** for PHP/Laravel, Flutter, Python, Java, Go, MySQL and PostgreSQL.
 - **Verified data**: every release checks counts, unique codes, parents and postal codes before it is published, with npm provenance.
@@ -74,6 +75,7 @@ Prefer one search box? It accepts names and postal codes:
 | `seminyak kuta` | Seminyak, Kuta, Badung, Bali |
 | `kota bogor` | Kota Bogor, Jawa Barat |
 | `80361` | Tuban, Kuta, Badung, Bali (and the other 4 villages with that postal code) |
+| `johan pahwalan` | Johan Pahlawan, Aceh Barat, Aceh (dulu Johan Pahwalan): former names are found too |
 
 ## What you get back
 
@@ -268,6 +270,7 @@ await w.resolve('51.03.01.1001')  // the full Alamat shown above
 await w.byPostalCode('80361')     // Tuban, Kuta, Kedonganan, Legian, Seminyak
 await w.search('denpasar sel')    // [{ wilayah: {...}, label: 'Denpasar Selatan, Kota Denpasar, Bali' }]
 await w.search('kuta', { levels: 3, provinsi: ['51'], limit: 5 })
+await w.migrate('72.01.09.2012')  // { status: 'moved', kode: '72.01.24.2007', namaLama: 'Tohitisari', alamat }
 ```
 
 Results are cached in memory, failed loads can be retried, and invalid codes are rejected before any request.
@@ -300,6 +303,36 @@ export function useWilayah() {
 }
 ```
 
+### Migrating saved addresses
+
+Kemendagri renumbers and renames regions between decrees. If you stored kode under the previous edition (Kepmendagri No. 100.1.1-6117 Tahun 2022), `migrate` tells you what happened to each one:
+
+```ts
+const m = await w.migrate(user.kodeWilayah)
+
+switch (m.status) {
+  case 'unchanged':
+  case 'renamed':  // same kode, new name: m.namaLama is the old one
+    break
+  case 'moved':    // new kode, e.g. the village moved to a new kecamatan
+    await db.users.update(user.id, { kodeWilayah: m.kode })
+    break
+  case 'removed':  // ask the user to pick their address again
+  case 'unknown':
+    await flagForReview(user.id)
+}
+```
+
+| status | Meaning | Count since the previous edition |
+| --- | --- | --- |
+| `unchanged` | Same kode, same name | |
+| `renamed` | Same kode, new name | 776 |
+| `moved` | New kode (`m.kode`) | 90 |
+| `removed` | The kode no longer exists | 1,160 |
+| `unknown` | Not a kode of either edition | |
+
+The same data is in `changes.json`, and in the `perubahan` table of the SQLite database for migrating in SQL. See [SPEC.md section 5](docs/SPEC.md#5-former-names-and-changes).
+
 ### Custom data source
 
 ```ts
@@ -317,9 +350,10 @@ Every data release also ships a SQLite database and CSV files, built from the sa
 | --- | --- | --- |
 | [`export/nusawilayah.sqlite`](https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/export/nusawilayah.sqlite) | 9.3 MB | Offline mobile/desktop apps: Flutter, Android, iOS, Python, PHP |
 | [`export/csv/provinsi.csv`](https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/export/csv/provinsi.csv) ... [`desa.csv`](https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/export/csv/desa.csv) | 3.9 MB total | Importing into MySQL, PostgreSQL, spreadsheets |
+| [`export/csv/alias.csv`](https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/export/csv/alias.csv), [`perubahan.csv`](https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/export/csv/perubahan.csv) | 0.2 MB | Former names; changes since the previous decree |
 | `dist/**/*.json` | < 1 KB per file | Loading on demand from any HTTP client |
 
-SQLite has one table:
+SQLite has a `wilayah` table, plus `alias` (former names) and `perubahan` (changes since the previous decree):
 
 | kode | nama | level | induk | tipe | kode_pos |
 | --- | --- | --- | --- | --- | --- |
@@ -385,6 +419,7 @@ Treat `kode` as text everywhere: `51.10` is not the number `51.1`.
 - **Sources:** [cahyadsn/wilayah](https://github.com/cahyadsn/wilayah) and [cahyadsn/wilayah_kodepos](https://github.com/cahyadsn/wilayah_kodepos), pinned per commit in [pipeline/build.ts](pipeline/build.ts) so every build is reproducible.
 - **Checks before release:** exact counts per level (38 / 514 / 7,285 / 83,762), unique and well-formed codes, no orphans, a valid postal code for every desa. The build fails otherwise.
 - **Data versions** are `YEAR.REVISION.PATCH` (`2025.2.x` = the second 2025 decree). A patch never changes a kode or nama, so the CDN URL `@2025.2` is safe to follow. Code packages use normal semver.
+- **Former names and changes** come from comparing older editions in the same source, per kode ([SPEC.md section 5](docs/SPEC.md#5-former-names-and-changes)).
 - **Postal codes** are best-effort and may be wrong for some villages. Let users correct them.
 
 Technical decisions are recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
@@ -404,10 +439,10 @@ PREVIEW=1 pnpm --filter example-vite e2e preview   # regenerate docs/images
 ```
 
 ```
-packages/core      headless client (wilayah.ts domain rules, loader.ts, search.ts, cascade.ts)
+packages/core      headless client (wilayah.ts domain rules, loader.ts, search.ts, cascade.ts, migrate.ts)
 packages/react     WilayahPicker, useWilayah, DefaultField, SearchField
 packages/data      generated data (dist/ JSON, export/ SQLite + CSV)
-pipeline           download → validate → split → write; export.ts writes SQLite + CSV
+pipeline           download → validate → split → write; history.ts aliases + changes; export.ts SQLite + CSV
 apps/example-vite  demo and browser tests
 docs               SPEC.md (data format), DECISIONS.md (why things are the way they are)
 ```

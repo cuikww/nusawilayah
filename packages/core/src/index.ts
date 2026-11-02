@@ -1,6 +1,7 @@
-// Public entry: createWilayah() wires the loader, the data queries, search and the cascade together.
+// Public entry: createWilayah() wires the loader, the data queries, search, migration and the cascade together.
 import { createCascade, type CascadeOptions } from './cascade.ts';
-import { cachedLoader, httpFetcher, isNotFound, type Fetcher } from './loader.ts';
+import { cachedLoader, httpFetcher, isNotFound, LoadError, type Fetcher } from './loader.ts';
+import { createMigrate } from './migrate.ts';
 import { createSearch } from './search.ts';
 import { KODE, LEVELS, PARENT_KODE, toAlamat, toWilayah, type Alamat, type Row, type Wilayah } from './wilayah.ts';
 
@@ -10,6 +11,7 @@ export type { Alamat, Level, Wilayah } from './wilayah.ts';
 export type { Fetcher } from './loader.ts';
 export type { Cascade, CascadeOptions, CascadeState, LevelState } from './cascade.ts';
 export type { SearchOptions, SearchResult } from './search.ts';
+export type { Migration } from './migrate.ts';
 
 export interface WilayahOptions {
   /** URL or path of the `dist` folder of @nusawilayah/data. Default: jsDelivr. */
@@ -46,7 +48,7 @@ export function createWilayah({ baseUrl = DEFAULT_BASE_URL, fetcher }: WilayahOp
       const k = parts.slice(0, i).join('.');
       const list = i === 1 ? await provinsi() : await children(parts.slice(0, i - 1).join('.'));
       const w = list.find((x) => x.kode === k);
-      if (!w) throw new Error(`nusawilayah: wilayah not found: ${k}`);
+      if (!w) throw new LoadError(`nusawilayah: wilayah not found: ${k}`, 404);
       path.push(w);
     }
     return toAlamat(path);
@@ -68,12 +70,19 @@ export function createWilayah({ baseUrl = DEFAULT_BASE_URL, fetcher }: WilayahOp
   /** Search by name (prefix match, no server) or by 5-digit postal code: search('denpasar sel'). */
   const search = createSearch(loadRaw, byPostalCode);
 
+  /**
+   * Maps a kode saved under the previous edition (Kepmendagri No. 100.1.1-6117 Tahun 2022) to the current one:
+   * migrate('72.01.09.2012') → { status: 'moved', kode: '72.01.24.2007', alamat }.
+   */
+  const migrate = createMigrate(loadRaw, resolve);
+
   const client = {
     provinsi,
     children,
     resolve,
     byPostalCode,
     search,
+    migrate,
     /** Headless state for cascading dropdowns, for framework adapters. */
     createCascade: (opts?: CascadeOptions) => createCascade(client, opts),
   };

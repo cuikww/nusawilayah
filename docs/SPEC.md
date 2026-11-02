@@ -2,7 +2,7 @@
 
 This document defines the data published in [`@nusawilayah/data`](https://www.npmjs.com/package/@nusawilayah/data): file layout, JSON schemas, the SQLite schema, the CSV format, kode rules and versioning. Ports to other languages (PHP/Laravel, Flutter, Python, ...) should follow it so they stay consistent with the JavaScript packages.
 
-Spec version: **1** (data `2025.2.3` and later). The JSON layout of `dist/` has not changed since `2025.2.0`.
+Spec version: **1.1** (data `2025.2.4` and later): adds former names (aliases) in the search indexes, `changes.json`, and the matching SQLite tables and CSV files. Version 1 (`2025.2.3`) had none of these. Every addition is backward compatible: readers of version 1 keep working.
 
 ## 1. Source and coverage
 
@@ -75,12 +75,14 @@ All files are UTF-8 JSON without whitespace. Rows are positional arrays (tuples)
 | `kecamatan/{kabupaten}.json` | kecamatan of a kabupaten, e.g. `kecamatan/51.03.json` | `Row[]` |
 | `desa/{kecamatan}.json` | desa of a kecamatan, e.g. `desa/51.03.01.json` | `DesaRow[]` |
 | `kodepos/{NN}.json` | postal code index by the first two digits, e.g. `kodepos/80.json` | `{ [kodePos]: Row[] }` |
-| `search/nasional.json` | search index, provinsi to kecamatan | `Row[]` |
-| `search/{provinsi}.json` | search index of the desa of one provinsi | `Row[]` |
+| `search/nasional.json` | search index, provinsi to kecamatan | `SearchRow[]` |
+| `search/{provinsi}.json` | search index of the desa of one provinsi | `SearchRow[]` |
+| `changes.json` | changes since the previous edition, see [section 5](#5-former-names-and-changes) | object |
 
 ```ts
 type Row = [kode: string, nama: string]
 type DesaRow = [kode: string, nama: string, kodePos: string]
+type SearchRow = [kode: string, nama: string, ...formerNames: string[]]
 ```
 
 Rows are sorted by kode. A file that does not exist means "no such parent" (or, for `kodepos/`, "no postal code with this prefix"): clients should treat HTTP 404 as an empty result, not as an error.
@@ -99,13 +101,16 @@ Examples:
 
 // kodepos/80.json
 { "80361": [["51.03.01.1001","Tuban"],["51.03.01.1002","Kuta"], ...], ... }
+
+// search/nasional.json: a row with a former name
+["11.05.01","Johan Pahlawan","Johan Pahwalan"]
 ```
 
 ### `meta.json`
 
 ```json
 {
-  "versi": "2025.2.3",
+  "versi": "2025.2.4",
   "dasarHukum": "Kepmendagri No. 300.2.2-2430 Tahun 2025",
   "dibangun": "2026-11-02T08:01:37.294Z",
   "jumlah": { "provinsi": 38, "kabupaten": 514, "kecamatan": 7285, "desa": 83762 },
@@ -115,7 +120,30 @@ Examples:
 }
 ```
 
-## 5. SQLite (`export/nusawilayah.sqlite`)
+## 5. Former names and changes
+
+Both come from comparing older editions in [cahyadsn/wilayah `db/archive`](https://github.com/cahyadsn/wilayah/tree/13f7b79b8e3fe066a6bab0302e9e3d797ee2f377/db/archive) with the current data, **per kode**. Two names are the same when they are equal after lowercasing, removing accents, punctuation and spaces, and dropping a leading `Kab.`/`Kabupaten` (archives write `KAB. ACEH SELATAN`). Archive names in capitals are converted to title case.
+
+**Former names (aliases).** For every current kode, each different name it had in `wilayah_2022.sql` or `wilayah_2023.sql`, oldest first. Searching a former name finds the current wilayah. 1,438 former names for 1,431 wilayah in `2025.2.4`.
+
+**`changes.json`** lists what changed from the previous edition (`wilayah_2023.sql`, Kepmendagri No. 100.1.1-6117 Tahun 2022) to the current one:
+
+```jsonc
+{
+  "dari": "Kepmendagri No. 100.1.1-6117 Tahun 2022",
+  "ke": "Kepmendagri No. 300.2.2-2430 Tahun 2025",
+  "gantiNama": [["11.01.10", "Pasi Raja", "Pasie Raja"], ...],        // [kode, namaLama, namaBaru]: same kode, new name (776)
+  "pindah":    [["72.01.09.2012", "72.01.24.2007", "Tohitisari"], ...], // [kodeLama, kodeBaru, nama]: new kode (90)
+  "dihapus":   [["72.06.07.2021", "Mbokitta"], ...],                    // [kode, nama]: gone (1,160)
+  "baru":      [["72.01.24", "Toili Jaya"], ...]                        // [kode, nama]: new (1,168)
+}
+```
+
+A kode counts as **moved** (`pindah`) when it is gone and exactly one new kode at the same level in the same provinsi has the same name; this catches kecamatan splits, where villages move to a new kecamatan. A move that also changed the name shows up as `dihapus` + `baru`. Every list is sorted by kode.
+
+To migrate a stored kode: if it is in `dihapus`, ask the user again; if it is in `pindah`, replace it with `kodeBaru`; otherwise keep it (the name may have changed). `@nusawilayah/core` does this in `migrate(kode)`.
+
+## 6. SQLite (`export/nusawilayah.sqlite`)
 
 One file with every wilayah and its postal code, for offline apps (Android/iOS, Flutter, desktop, Python, PHP).
 
@@ -131,6 +159,23 @@ CREATE TABLE wilayah (
 CREATE INDEX wilayah_induk ON wilayah (induk);
 CREATE INDEX wilayah_kode_pos ON wilayah (kode_pos);
 
+-- former names (section 5)
+CREATE TABLE alias (
+  kode TEXT NOT NULL REFERENCES wilayah (kode),
+  nama TEXT NOT NULL,
+  PRIMARY KEY (kode, nama)
+) WITHOUT ROWID;
+
+-- changes since the previous edition (section 5), one row per change
+CREATE TABLE perubahan (
+  jenis     TEXT NOT NULL CHECK (jenis IN ('ganti_nama', 'pindah', 'dihapus', 'baru')),
+  kode_lama TEXT,
+  kode_baru TEXT,
+  nama_lama TEXT,
+  nama_baru TEXT
+);
+CREATE INDEX perubahan_kode_lama ON perubahan (kode_lama);
+
 CREATE TABLE meta (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -138,6 +183,7 @@ CREATE TABLE meta (
 ```
 
 - `induk` is `NULL` for provinsi. `tipe` is `NULL` for provinsi and kecamatan. `kode_pos` is set for desa only.
+- `perubahan`: `ganti_nama` has the same kode in both columns, `pindah` has both kode, `dihapus` has only `kode_lama`/`nama_lama`, `baru` only `kode_baru`/`nama_baru`.
 - `meta` keys: `versi`, `dasar_hukum`, `dibangun`, `sumber` (space-separated URLs), `atribusi`.
 - Requires SQLite 3.8.2 or later (`WITHOUT ROWID`), which every supported Android and iOS version has.
 
@@ -159,13 +205,19 @@ WITH RECURSIVE path(kode, nama, level, induk) AS (
 )
 SELECT level, kode, nama FROM path;
 
--- name search
-SELECT kode, nama, level FROM wilayah WHERE nama LIKE '%denpasar%' ORDER BY length(kode);
+-- name search, including former names
+SELECT DISTINCT w.kode, w.nama, w.level FROM wilayah w LEFT JOIN alias a ON a.kode = w.kode
+WHERE w.nama LIKE '%pahwalan%' OR a.nama LIKE '%pahwalan%' ORDER BY length(w.kode);
+
+-- migrate kode saved under the previous edition
+UPDATE alamat SET kode_wilayah = (SELECT kode_baru FROM perubahan WHERE jenis = 'pindah' AND kode_lama = alamat.kode_wilayah)
+WHERE kode_wilayah IN (SELECT kode_lama FROM perubahan WHERE jenis = 'pindah');
+SELECT * FROM alamat WHERE kode_wilayah IN (SELECT kode_lama FROM perubahan WHERE jenis = 'dihapus'); -- ask these users again
 ```
 
-## 6. CSV (`export/csv/{level}.csv`)
+## 7. CSV (`export/csv/*.csv`)
 
-One file per level, for importing into MySQL, PostgreSQL or a spreadsheet.
+One file per level plus the two tables of section 5, for importing into MySQL, PostgreSQL or a spreadsheet.
 
 | File | Columns |
 | --- | --- |
@@ -173,6 +225,8 @@ One file per level, for importing into MySQL, PostgreSQL or a spreadsheet.
 | `kabupaten.csv` | `kode,induk,nama,tipe` |
 | `kecamatan.csv` | `kode,induk,nama` |
 | `desa.csv` | `kode,induk,nama,tipe,kode_pos` |
+| `alias.csv` | `kode,nama` |
+| `perubahan.csv` | `jenis,kode_lama,kode_baru,nama_lama,nama_baru` |
 
 - UTF-8 without BOM, LF line endings, one header row, rows sorted by kode.
 - RFC 4180 quoting: a field is quoted only if it contains a comma, double quote or newline; quotes inside are doubled.
@@ -183,16 +237,16 @@ kode,induk,nama,tipe,kode_pos
 51.03.01.1001,51.03.01,Tuban,kelurahan,80361
 ```
 
-## 7. Versioning
+## 8. Versioning
 
 The data package uses `YEAR.REVISION.PATCH`, independent of the code packages:
 
 - `YEAR.REVISION` names the Kepmendagri edition. `2025.2` is the second 2025 decree (No. 300.2.2-2430).
 - `PATCH` adds files or fixes the build without changing any kode or nama. A pinned `@2025.2` URL is therefore always safe to follow.
 
-A new decree means a new `YEAR.REVISION`. Kode can then be added, removed, renamed or moved to another parent; a `changes.json` listing those changes is planned so that stored addresses can be migrated.
+A new decree means a new `YEAR.REVISION`. Kode can then be added, removed, renamed or moved to another parent; `changes.json` lists those changes against the previous edition so that stored addresses can be migrated.
 
-## 8. URLs
+## 9. URLs
 
 Every file is served by jsDelivr from npm:
 
@@ -205,6 +259,6 @@ https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/export/csv/desa.csv
 
 Pin a full version (e.g. `@2025.2.3`) for reproducible builds.
 
-## 9. License and attribution
+## 10. License and attribution
 
 MIT. Derived from [cahyadsn/wilayah](https://github.com/cahyadsn/wilayah) and [cahyadsn/wilayah_kodepos](https://github.com/cahyadsn/wilayah_kodepos) (MIT, © cahya dsn). Region codes and names come from Kepmendagri No. 300.2.2-2430 Tahun 2025. Postal codes are best-effort and may be inaccurate for some desa.

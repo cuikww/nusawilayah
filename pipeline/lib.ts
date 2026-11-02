@@ -41,9 +41,10 @@ export function validate(wilayah: [string, string][], kodepos: Map<string, strin
  * Split into files keyed by output path. Rows are tuples to keep files small:
  * [kode, nama] for provinsi/kabupaten/kecamatan, [kode, nama, kodepos] for desa.
  * Level, induk and tipe are derived from kode/nama by core (packages/core/src/wilayah.ts).
- * Search indexes: search/nasional.json (provinsi..kecamatan) and search/{provinsi}.json (desa per provinsi).
+ * Search indexes: search/nasional.json (provinsi..kecamatan) and search/{provinsi}.json (desa per provinsi),
+ * rows [kode, nama, ...oldNames].
  */
-export function split(wilayah: [string, string][], kodepos: Map<string, string>) {
+export function split(wilayah: [string, string][], kodepos: Map<string, string>, alias = new Map<string, string[]>()) {
   const files = new Map<string, unknown>();
   const push = (path: string, row: unknown) => {
     if (!files.has(path)) files.set(path, []);
@@ -53,15 +54,16 @@ export function split(wilayah: [string, string][], kodepos: Map<string, string>)
 
   for (const [kode, nama] of [...wilayah].sort((a, b) => a[0].localeCompare(b[0]))) {
     const level = levelOf(kode);
-    if (level === 'provinsi') { push('provinsi.json', [kode, nama]); push('search/nasional.json', [kode, nama]); continue; }
+    const searchRow = [kode, nama, ...(alias.get(kode) ?? [])];
+    if (level === 'provinsi') { push('provinsi.json', [kode, nama]); push('search/nasional.json', searchRow); continue; }
     if (level !== 'desa') {
       push(`${level}/${parentOf(kode)}.json`, [kode, nama]);
-      push('search/nasional.json', [kode, nama]);
+      push('search/nasional.json', searchRow);
       continue;
     }
     const pos = kodepos.get(kode)!;
     push(`desa/${parentOf(kode)}.json`, [kode, nama, pos]);
-    push(`search/${kode.slice(0, 2)}.json`, [kode, nama]);
+    push(`search/${kode.slice(0, 2)}.json`, searchRow);
     ((byPos[pos.slice(0, 2)] ??= {})[pos] ??= []).push([kode, nama]);
   }
   for (const [prefix, index] of Object.entries(byPos)) files.set(`kodepos/${prefix}.json`, index);

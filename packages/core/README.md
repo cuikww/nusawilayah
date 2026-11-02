@@ -16,6 +16,7 @@ await w.children('51')               // kabupaten/kota in Bali
 await w.resolve('51.03.01.1001')     // { provinsi, kabupaten, kecamatan, desa, kodePos } for edit forms
 await w.byPostalCode('80361')        // every desa with this postal code
 await w.search('denpasar sel')       // [{ wilayah, label: 'Denpasar Selatan, Kota Denpasar, Bali' }]
+await w.migrate('72.01.09.2012')     // { status: 'moved', kode: '72.01.24.2007', alamat } for kode saved under the previous decree
 ```
 
 ## Data source
@@ -30,11 +31,15 @@ A custom fetcher must throw an error with `status: 404` for a file that does not
 
 ## Search
 
-Prefix matching, case- and accent-insensitive. The words kabupaten/kecamatan/desa are ignored ("kota" is kept to tell Kota Bogor from Kabupaten Bogor), and a 5-digit query is treated as a postal code. The provinsi-to-kecamatan index is always used. A province's village index loads only when relevant: when a parent is named ("seminyak kuta") or the search is restricted with `{ provinsi: ['51'] }`.
+Prefix matching, case- and accent-insensitive. The words kabupaten/kecamatan/desa are ignored ("kota" is kept to tell Kota Bogor from Kabupaten Bogor), and a 5-digit query is treated as a postal code. Former names are searched too: `johan pahwalan` finds Johan Pahlawan, with `alias: 'Johan Pahwalan'` on the result. The provinsi-to-kecamatan index is always used. A province's village index loads only when relevant: when a parent is named ("seminyak kuta") or the search is restricted with `{ provinsi: ['51'] }`.
 
 ```ts
 await w.search('kuta', { levels: 3, provinsi: ['51'], limit: 5 })
 ```
+
+## Migrating saved addresses
+
+`migrate(kode)` maps a kode saved under the previous edition (Kepmendagri No. 100.1.1-6117 Tahun 2022) to the current one. `status` is `unchanged`, `renamed` (same kode, `namaLama` is the old name), `moved` (use the new `kode`), `removed` (ask the user again) or `unknown`. It loads `changes.json` (about 27 KB gzip) once.
 
 ## Cascading dropdowns for other frameworks
 
