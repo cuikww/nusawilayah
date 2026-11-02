@@ -1,0 +1,77 @@
+name: Data update
+on:
+  schedule:
+    - cron: '0 2 1 * *' # monthly, 1st at 02:00 UTC
+  workflow_dispatch:
+
+concurrency: data-update
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BRANCH: data/update-sources
+    steps:
+      - uses: actions/checkout@v4
+      # Point each pinned source in build.ts at the latest upstream commit touching its file. Compares file
+      # contents (blob SHA), not commits: the pinned commit can be newer than the last one touching the file.
+      - id: bump
+        run: |
+          blob() { gh api "repos/$1/contents/$(dirname "$2")?ref=$3" --jq ".[] | select(.path == \"$2\") | .sha"; }
+          for spec in 'cahyadsn/wilayah db/wilayah.sql' 'cahyadsn/wilayah_kodepos db/wilayah_kodepos.sql'; do
+            set -- $spec
+            pinned=$(grep -oE "repo: '$1', commit: '[0-9a-f]{40}" pipeline/build.ts | grep -oE '[0-9a-f]{40}$')
+            latest=$(gh api "repos/$1/commits?path=$2&per_page=1" --jq '.[0].sha')
+            if [ "$(blob "$1" "$2" "$pinned")" != "$(blob "$1" "$2" "$latest")" ]; then
+              sed -i "s/$pinned/$latest/" pipeline/build.ts
+              echo "- [$1](https://github.com/$1/compare/$pinned...$latest) \`$2\`" >> "$RUNNER_TEMP/body.md"
+            fi
+          done
+          git diff --quiet && echo "No upstream changes." || echo changed=true >> "$GITHUB_OUTPUT"
+
+      - if: steps.bump.outputs.changed
+        uses: pnpm/action-setup@v4
+      - if: steps.bump.outputs.changed
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      # The pipeline exits 1 if any integrity check fails (counts, orphans, duplicate codes), failing this run
+      # instead of opening a PR with broken data.
+      - if: steps.bump.outputs.changed
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --filter @nusawilayah/pipeline build:data | tee "$RUNNER_TEMP/build.txt"
+
+      # dist/ and export/ are build outputs, so the PR only bumps the pinned commits and adds a changeset.
+      # PRs opened with GITHUB_TOKEN do not trigger CI: close and reopen the PR to run it.
+      - if: steps.bump.outputs.changed
+        run: |
+          printf -- "---\n'@nusawilayah/data': patch\n---\n\nUpdate data sources to the latest upstream commits.\n" > .changeset/data-update.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -B "$BRANCH"
+          git add pipeline/build.ts .changeset/data-update.md
+          git commit -m 'chore(data): update upstream sources' --quiet
+          git push --force origin "$BRANCH"
+          {
+            echo 'Upstream data changed:'
+            echo
+            cat "$RUNNER_TEMP/body.md"
+            echo
+            echo 'The pipeline integrity checks passed. Review `changes.json` and the counts in the build output before merging; close and reopen this PR to run CI.'
+            echo
+            echo '<details><summary>Build output</summary>'
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/build.txt"
+            echo '```'
+            echo '</details>'
+          } > "$RUNNER_TEMP/pr.md"
+          gh pr view "$BRANCH" --json state -q .state 2>/dev/null | grep -q OPEN \
+            && gh pr edit "$BRANCH" --body-file "$RUNNER_TEMP/pr.md" \
+            || gh pr create --head "$BRANCH" --title 'chore(data): update upstream sources' --body-file "$RUNNER_TEMP/pr.md"
