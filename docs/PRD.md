@@ -6,24 +6,24 @@ Nov 2, 2026 · @kyky
 
 ## Status implementasi
 
-Per 2 November 2026: `@nusawilayah/core` 0.3.0, `@nusawilayah/react` 0.3.0, `@nusawilayah/data` 2025.2.3 terbit di npm (Trusted Publishing + provenance). Semua pekerjaan v0.1 dan v0.2 di bawah sudah di-commit dan menunggu rilis berikutnya (core/react 0.4.0, data 2025.2.4).
+Per 3 November 2026: `@nusawilayah/core` 0.4.0, `@nusawilayah/react` 0.4.0, `@nusawilayah/data` 2025.2.4 terbit di npm (Trusted Publishing + provenance). Situs docs + playground: https://cuikww.github.io/nusawilayah/
 
 Legenda: `[x]` selesai · `[ ]` belum · 🟡 sebagian (penjelasan di catatan)
 
 | Fase | Status |
 | --- | --- |
-| v0.1 Fondasi | Selesai. Tinggal **Gerbang 1** (dipakai di 1 proyek nyata), yang harus dijalankan pemilik proyek |
+| v0.1 Fondasi | Selesai. **Gerbang 1** (dipakai di 1 proyek nyata) masih menunggu pemilik proyek |
 | v0.2 Pencarian | Selesai, **Gerbang 2** lolos (axe + size-limit di CI) |
-| v0.3 Peta | Belum dimulai (menunggu Gerbang 3: asal data batas) |
+| v0.3 Peta | Bisa dimulai. **Gerbang 3** (asal data batas jelas) menahan *rilis* peta: sudah ditanyakan di [cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9), belum dijawab |
 | v1.0 Stabil | Belum dimulai |
 
-**Yang tersisa sebelum v0.3:**
+**Berikutnya:**
 
 1. Gerbang 1: pakai picker di 1 proyek nyata
-2. Aktifkan GitHub Pages (Settings → Pages → Source: GitHub Actions) agar situs docs terbit
-3. Tanyakan asal data batas ke cahyadsn (Gerbang 3)
+2. v0.3: pipeline batas wilayah, `@nusawilayah/geo`, `<PetaIndonesia>`, choropleth, sinkron dengan picker
+3. Gerbang 3: tunggu jawaban asal data batas sebelum merilis paket peta
 
-**Di luar fase v0.1/v0.2, belum dikerjakan:** pembanding idn-area-data, lint dan Storybook di CI, uji Next.js Pages Router, skor Lighthouse.
+**Di luar fase, belum dikerjakan:** lint dan Storybook di CI, skor Lighthouse, .zip di GitHub Releases, adapter sumber data kedua.
 
 ## Ringkasan
 
@@ -79,8 +79,8 @@ Tujuan utama: developer bisa memasang form alamat Indonesia yang lengkap dan cep
 | Unduhan npm paket React | 2.000/bulan | Diukur setelah v1.0 |
 | Ukuran awal yang dimuat (picker, gzip) | di bawah 15 KB kode + 2 KB data provinsi | ✅ 5,3 KB kode (diukur size-limit di CI) + 0,4 KB provinsi |
 | Waktu sampai dropdown provinsi tampil | di bawah 100 ms di HP kelas menengah | 🟡 diukur pada simulasi HP kelas menengah (CPU 4x lebih lambat, 4G 150 ms): dengan render server, provinsi sudah ada saat first paint (0,6 s sejak navigasi, dibatasi jaringan); dropdown berikutnya 24 ms dari cache, 0,4 s lewat jaringan |
-| Jeda pembaruan data setelah Kepmendagri baru terbit | maksimal 30 hari | ⬜ butuh workflow bulanan |
-| Kontributor selain pemilik proyek | minimal 3 | ⬜ |
+| Jeda pembaruan data setelah Kepmendagri baru terbit | maksimal 30 hari | 🟡 workflow bulanan (`data-update.yml`) membuka PR paling lambat ±31 hari setelah sumber berubah; jeda dari terbitnya Kepmendagri sampai sumber diperbarui ada di luar kendali proyek |
+| Kontributor selain pemilik proyek | minimal 3 | 🟡 1 (kykyramadhani) |
 | Skor aksesibilitas (Lighthouse, halaman demo) | 100 | 🟡 axe WCAG 2.1 AA 0 pelanggaran; Lighthouse belum dijalankan |
 
 ## Pengguna sasaran & user stories
@@ -114,16 +114,16 @@ Produk terdiri dari 5 paket dalam satu monorepo; v0.1 hanya merilis tiga paket p
 
 | Paket | Isi | Rilis | Status |
 | --- | --- | --- | --- |
-| @nusawilayah/data | Data wilayah + kode pos, dipecah per wilayah dalam JSON | v0.1 | ✅ terbit (2025.2.3) |
-| @nusawilayah/core | Logika headless: memuat data, cache, pencarian, state bertingkat | v0.1 | ✅ terbit (0.3.0) |
-| @nusawilayah/react | Komponen `<WilayahPicker>`, hook `useWilayah` | v0.1 | ✅ terbit (0.3.0) |
+| @nusawilayah/data | Data wilayah + kode pos, dipecah per wilayah dalam JSON | v0.1 | ✅ terbit (2025.2.4) |
+| @nusawilayah/core | Logika headless: memuat data, cache, pencarian, state bertingkat | v0.1 | ✅ terbit (0.4.0) |
+| @nusawilayah/react | Komponen `<WilayahPicker>`, hook `useWilayah` | v0.1 | ✅ terbit (0.4.0) |
 | @nusawilayah/geo | Proyeksi dan render peta; data batas di paket terpisah per level (`geo-provinsi`, `geo-kabupaten`, `geo-kecamatan`) | v0.3 | ⬜ |
 | @nusawilayah/map-react | Komponen `<PetaIndonesia>` | v0.3 | ⬜ |
 
 ### F1. Data (@nusawilayah/data)
 
 - [x] F1.1 Empat level: provinsi (38), kabupaten/kota (514), kecamatan (7.285), desa/kelurahan (83.762)
-- [x] F1.2 Tiap wilayah punya kode Kemendagri bertitik (mis. 51.03.01.1001), nama resmi, tipe (kabupaten/kota, desa/kelurahan), dan nama lama jika pernah berganti (alias, mulai v0.2) — *Status:* nama lama ada di indeks pencarian, tabel SQLite `alias`, dan `alias.csv`; belum dirilis
+- [x] F1.2 Tiap wilayah punya kode Kemendagri bertitik (mis. 51.03.01.1001), nama resmi, tipe (kabupaten/kota, desa/kelurahan), dan nama lama jika pernah berganti (alias, mulai v0.2) — *Status:* nama lama ada di indeks pencarian, tabel SQLite `alias`, dan `alias.csv` (data 2025.2.4)
 - [x] F1.3 Kode pos per desa/kelurahan, dan indeks balik kode pos ke daftar desa
 - [x] F1.4 File meta.json mencatat dasar hukum (nomor Kepmendagri), tanggal build, dan jumlah per level
 - [x] F1.5 Data dipecah: satu file provinsi, satu file kabupaten per provinsi, satu file kecamatan per kabupaten, satu file desa per kecamatan
@@ -134,7 +134,7 @@ Produk terdiri dari 5 paket dalam satu monorepo; v0.1 hanya merilis tiga paket p
 - [x] F2.2 Memuat anak wilayah sesuai pilihan (`children("51.03")`), dengan cache memori dan opsi cache IndexedDB — *Status:* `createWilayah({ cache: 'indexeddb' })`, simpan 7 hari, diuji offline di Chrome
 - [x] F2.3 State machine bertingkat: memilih level atas mengosongkan level di bawahnya
 - [x] F2.4 `resolve("51.03.01.1001")`: mengisi semua level dari satu kode, untuk form edit
-- [x] F2.5 Pencarian: cocok awalan dan tanpa memperhatikan huruf besar, mengabaikan kata "Kabupaten", "Kota", "Kecamatan"; nama lama ikut dicari; seluruhnya di browser tanpa server; hasil menampilkan jalur lengkap ("Kuta, Badung, Bali") — *Status:* kata "Kota" sengaja **tidak** diabaikan agar Kota Bogor dan Kabupaten Bogor bisa dibedakan; nama lama ikut dicari (belum dirilis)
+- [x] F2.5 Pencarian: cocok awalan dan tanpa memperhatikan huruf besar, mengabaikan kata "Kabupaten", "Kota", "Kecamatan"; nama lama ikut dicari; seluruhnya di browser tanpa server; hasil menampilkan jalur lengkap ("Kuta, Badung, Bali") — *Status:* kata "Kota" sengaja **tidak** diabaikan agar Kota Bogor dan Kabupaten Bogor bisa dibedakan; nama lama ikut dicari (core 0.4.0)
 - [x] F2.6 Lookup kode pos: `byPostalCode("80361")` mengembalikan daftar desa
 - [x] F2.7 Bisa membatasi cakupan, mis. hanya provinsi tertentu atau berhenti di level kecamatan
 
@@ -266,7 +266,7 @@ dist/
   changes.json              perubahan dibanding rilis sebelumnya
 ```
 
-*Status:* semua file di atas sudah dibuat (`changes.json` belum dirilis). Tambahan di luar rencana: `export/nusawilayah.sqlite` dan `export/csv/*.csv`.
+*Status:* semua file di atas sudah dibuat. Tambahan di luar rencana: `export/nusawilayah.sqlite` dan `export/csv/*.csv`.
 
 **Ukuran hasil (diukur, kode + nama saja, gzip)**
 
@@ -403,7 +403,7 @@ Kode dan data dipisah: kode dipasang lewat npm dan masuk bundle, sedangkan data 
 
 Versi data memakai format TAHUN.REVISI, terpisah dari versi kode: @nusawilayah/data@2025.2 = Kepmendagri 2025, revisi kedua (No. 300.2.2-2430). Kode core menerima data versi mana pun selama skema sama, jadi pembaruan data tidak memaksa upgrade kode. *Status:* ✅ (`TAHUN.REVISI.patch`).
 
-Perubahan kode wilayah: tiap rilis data menyertakan changes.json (wilayah baru, dihapus, berganti nama, pindah induk) dibanding versi sebelumnya, supaya developer bisa memigrasikan alamat yang sudah tersimpan di database. *Status:* ✅ `changes.json` + `migrate(kode)` (belum dirilis).
+Perubahan kode wilayah: tiap rilis data menyertakan changes.json (wilayah baru, dihapus, berganti nama, pindah induk) dibanding versi sebelumnya, supaya developer bisa memigrasikan alamat yang sudah tersimpan di database. *Status:* ✅ `changes.json` + `migrate(kode)` (core 0.4.0, data 2025.2.4).
 
 ### Penyimpanan file peta
 
@@ -413,7 +413,7 @@ File hasil konversi tidak disimpan di repo git; git hanya menyimpan skrip pipeli
 | --- | --- | --- | --- |
 | npm (utama) | TopoJSON per provinsi, dipecah per level: @nusawilayah/geo-provinsi, geo-kabupaten, geo-kecamatan | Gratis; developer hanya memasang level yang dibutuhkan | ⬜ v0.3 |
 | CDN jsDelivr / unpkg (otomatis) | File yang sama, langsung dari npm | Tanpa server sendiri, gratis, cepat di Indonesia | ✅ untuk data wilayah |
-| GitHub Releases | .zip SVG + GeoJSON siap unduh per level, plus SQLite dan CSV data wilayah | Untuk non-programmer, yang hanya butuh gambar, dan developer bahasa selain JavaScript | 🟡 SQLite dan CSV disajikan lewat npm/jsDelivr (`export/`), belum sebagai .zip di GitHub Releases |
+| GitHub Releases | .zip SVG + GeoJSON siap unduh per level, plus SQLite dan CSV data wilayah | Untuk non-programmer, yang hanya butuh gambar, dan developer bahasa selain JavaScript | 🟡 SQLite dan CSV disajikan lewat npm/jsDelivr (`export/`), belum sebagai .zip di GitHub Releases (SVG + GeoJSON menyusul v0.3) |
 | Server developer (opsional) | Salinan lewat `npx nusawilayah copy` | Untuk aplikasi yang tidak boleh bergantung pada CDN | ✅ |
 
 Level desa (187 MB data mentah) ditunda: berat dan jarang dibutuhkan. Jika kelak dibuat, disimpan di Cloudflare R2, bukan npm.
@@ -460,7 +460,7 @@ Keputusan: sumber data utama adalah repo-repo cahyadsn yang berlisensi MIT, buka
 - [x] Data turunan: MIT, mencantumkan atribusi ke cahyadsn dan dasar hukum Kepmendagri di meta.json dan README
 - [x] Kode dan nama wilayah dari Kepmendagri adalah dokumen pemerintah; tetap dicantumkan nomor keputusannya
 - [ ] Batas wilayah di peta adalah ilustrasi, bukan batas hukum. README dan komponen peta mencantumkan penafian ini; batas resmi mengacu pada Kemendagri dan Badan Informasi Geospasial (BIG) (v0.3)
-- [ ] Sebelum rilis peta, konfirmasi ke pemilik cahyadsn/wilayah_boundaries tentang asal data batasnya; jika turunan OpenStreetMap, paket geo-* dirilis dengan ODbL, kode dan data wilayah tetap MIT
+- [ ] Sebelum rilis peta, konfirmasi ke pemilik cahyadsn/wilayah_boundaries tentang asal data batasnya; jika turunan OpenStreetMap, paket geo-* dirilis dengan ODbL, kode dan data wilayah tetap MIT — *Status:* sudah ditanyakan ([#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9)), menunggu jawaban
 
 ## Roadmap & milestone
 
@@ -494,7 +494,7 @@ SQLite, CSV, dan SPEC.md ikut dirilis sejak v0.1 karena hanya keluaran tambahan 
 - [ ] PetaIndonesia
 - [ ] choropleth
 - [ ] sinkron dengan picker
-- [ ] **Gerbang 3:** asal data batas jelas
+- [ ] **Gerbang 3:** asal data batas jelas — *Status:* ditanyakan di [cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9) (2 November 2026), belum dijawab
 
 **v1.0 Stabil (minggu 10 sampai 12)**
 
@@ -518,12 +518,12 @@ Risiko terbesar adalah ketergantungan pada satu sumber data yang dirawat satu or
 | Risiko | Kemungkinan | Dampak | Mitigasi | Status mitigasi |
 | --- | --- | --- | --- | --- |
 | Sumber data berhenti diperbarui | Sedang | Tinggi | Adapter sumber yang bisa ditukar; bisa membaca lampiran Kepmendagri langsung sebagai cadangan | 🟡 sumber dipin per commit dan parser terpisah dari validasi; adapter sumber kedua belum |
-| Kepmendagri baru mengubah atau menghapus kode | Pasti terjadi | Sedang | changes.json per rilis + fungsi migrasi alamat tersimpan | ✅ `changes.json` + `migrate()` (belum dirilis) |
+| Kepmendagri baru mengubah atau menghapus kode | Pasti terjadi | Sedang | changes.json per rilis + fungsi migrasi alamat tersimpan | ✅ `changes.json` + `migrate()` |
 | Kode pos tidak akurat (satu kode pos banyak desa, atau sebaliknya) | Tinggi | Sedang | Kode pos sebagai saran yang bisa diubah pengguna, bukan nilai wajib | ✅ kolom kode pos terisi otomatis tapi bisa diubah |
 | Peta terlalu berat di HP | Sedang | Sedang | Tiga tingkat kehalusan garis, file per provinsi, uji ukuran di CI | ⬜ v0.3 |
 | Sengketa batas wilayah | Rendah | Tinggi | Penafian "bukan batas hukum", ikuti versi Kemendagri tanpa penilaian sendiri | ⬜ v0.3 |
 | CDN jsDelivr lambat atau diblokir | Rendah | Sedang | Mode self-host dan fetch kustom sejak v0.1 | ✅ |
-| Proyek bergantung pada satu maintainer | Tinggi | Tinggi | Dokumentasi kontribusi, label good first issue, ajak minimal 2 co-maintainer sebelum v1.0 | 🟡 dokumentasi + SPEC.md ada; co-maintainer belum |
+| Proyek bergantung pada satu maintainer | Tinggi | Tinggi | Dokumentasi kontribusi, label good first issue, ajak minimal 2 co-maintainer sebelum v1.0 | 🟡 dokumentasi + SPEC.md ada; 1 kolaborator aktif (kykyramadhani) |
 | Paket serupa muncul lebih dulu | Sedang | Rendah | Fokus pada kualitas UI dan aksesibilitas; terbuka untuk bergabung jika ada proyek yang lebih maju | ✅ axe WCAG 2.1 AA di CI |
 
 **Keputusan atas pertanyaan terbuka**
