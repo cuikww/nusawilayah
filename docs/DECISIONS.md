@@ -137,4 +137,4 @@ Checked on 2 November 2026: both pinned sources hold the same file contents as u
 ## Not done yet
 
 - Gate 1: use the picker in a real project
-- idn-area-data name comparison, lint and Storybook in CI, Next.js Pages Router test, Lighthouse score
+- lint and Storybook in CI, Next.js Pages Router test, Lighthouse score

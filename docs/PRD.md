@@ -426,7 +426,7 @@ Setiap rilis data wajib lolos uji integritas otomatis; rilis kode wajib lolos uj
 
 - [x] Jumlah per level sama persis dengan tabel rekap Kepmendagri (38 / 514 / 7.285 / 83.762)
 - [x] Setiap kode unik, setiap anak punya induk, tidak ada wilayah yatim
-- [ ] Nama dibandingkan dengan sumber kedua (idn-area-data); selisih dicatat sebagai laporan, bukan gagal otomatis
+- [x] Nama dibandingkan dengan sumber kedua (idn-area-data); selisih dicatat sebagai laporan, bukan gagal otomatis — *Status:* dicetak di output build (commit idn-area-data di-pin); per 2 November 2026 semua 91.599 kode cocok, 11 nama berbeda
 - [ ] Setiap batas wilayah di peta punya pasangan kode di data, dan sebaliknya (v0.3)
 
 **Uji kode**
