@@ -1,10 +1,11 @@
 {
   "name": "@nusawilayah/data",
   "version": "2025.2.2",
-  "description": "Data wilayah Indonesia (Kepmendagri No. 300.2.2-2430 Tahun 2025) + kode pos, dipecah per wilayah induk dalam JSON",
+  "description": "Indonesian administrative regions (Kepmendagri No. 300.2.2-2430 Tahun 2025) with postal codes, as split JSON, SQLite and CSV",
   "license": "MIT",
   "files": [
     "dist",
+    "export",
     "README.md"
   ],
   "scripts": {
@@ -28,7 +29,9 @@
     "kode pos",
     "kemendagri",
     "region picker",
-    "address"
+    "address",
+    "sqlite",
+    "csv"
   ],
   "publishConfig": {
     "access": "public",

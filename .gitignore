@@ -4,3 +4,4 @@ dist
 pipeline/.cache
 test-results
 playwright-report
+packages/data/export
