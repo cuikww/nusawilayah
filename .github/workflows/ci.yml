@@ -1,0 +1,25 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/cache@v4
+        with:
+          path: pipeline/.cache
+          key: sources-${{ hashFiles('pipeline/build.ts') }}
+      - run: pnpm install --frozen-lockfile
+      # build runs the data pipeline, which fails if any integrity check fails
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: pnpm test
