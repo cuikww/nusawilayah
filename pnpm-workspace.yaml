@@ -4,3 +4,6 @@ packages:
   - apps/*
 allowBuilds:
   esbuild: true
+  # optional native speedups of mapshaper's dependencies; the pipeline does not need them
+  better-sqlite3: false
+  msgpackr-extract: false
