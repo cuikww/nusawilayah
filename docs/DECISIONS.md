@@ -128,8 +128,16 @@ Names are stored as official names, including the "Kabupaten"/"Kota" prefix.
 
 **Measured on a simulated mid-range phone** (4x CPU slowdown, 4G with 150 ms latency, Next.js production build): provinsi visible at first paint (0.6 s from navigation, network-bound), hydrated at 2.4 s (mostly the Next.js runtime), next dropdown 0.4 s over the network and 24 ms from cache. The PRD's "< 100 ms to the provinsi dropdown" is met only in the sense that server rendering adds no wait after first paint; from navigation start it is bound by the network.
 
+## 2026-11-02: Name cross-check with idn-area-data
+
+**The pipeline compares every name with `fityannugroho/idn-area-data`** (pinned commit, its CSVs use the same dotted kode) and prints the differences at the end of the build. Differences never fail the build (PRD): the second source has its own typos, so a human decides. Only letters and digits are compared, because most raw differences are formatting (`Jong-Jong` vs `Jong - Jong`, a trailing dot). idn-area-data is MIT since v4, not ODbL as the PRD noted, and is only read, never shipped.
+
+First run: all 91,599 kode match in both directions; 11 names differ, e.g. `73.26.03.1004` Nanggala Sanpiak Satu vs Salu, `71.09` Kep. vs Kepulauan Siau Tagulandang Biaro.
+
+**Cache file names** now always end in `__<file name>`, so several files from one commit no longer share a cache path.
+
 ## Not done yet
 
 - monthly workflow that checks the source and opens a data PR (PRD)
 - Gate 1: use the picker in a real project
-- idn-area-data name comparison, lint and Storybook in CI, Next.js Pages Router test, Lighthouse score
+- lint and Storybook in CI, Next.js Pages Router test, Lighthouse score
