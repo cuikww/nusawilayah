@@ -128,16 +128,13 @@ Names are stored as official names, including the "Kabupaten"/"Kota" prefix.
 
 **Measured on a simulated mid-range phone** (4x CPU slowdown, 4G with 150 ms latency, Next.js production build): provinsi visible at first paint (0.6 s from navigation, network-bound), hydrated at 2.4 s (mostly the Next.js runtime), next dropdown 0.4 s over the network and 24 ms from cache. The PRD's "< 100 ms to the provinsi dropdown" is met only in the sense that server rendering adds no wait after first paint; from navigation start it is bound by the network.
 
-## 2026-11-02: Name cross-check with idn-area-data
+## 2026-11-02: Monthly data check
 
-**The pipeline compares every name with `fityannugroho/idn-area-data`** (pinned commit, its CSVs use the same dotted kode) and prints the differences at the end of the build. Differences never fail the build (PRD): the second source has its own typos, so a human decides. Only letters and digits are compared, because most raw differences are formatting (`Jong-Jong` vs `Jong - Jong`, a trailing dot). idn-area-data is MIT since v4, not ODbL as the PRD noted, and is only read, never shipped.
+**`.github/workflows/data-update.yml`** runs on the 1st of each month (and on demand). For each pinned source it compares the file's blob SHA at the pinned commit with the latest commit touching that file, not the commit SHAs: the pinned commit is usually the repo HEAD at the time, newer than the last commit touching the file, so comparing commits would open empty PRs. On a change it bumps the commit in `pipeline/build.ts`, runs the pipeline (integrity checks fail the run instead of opening a PR with bad data), and opens or updates one PR on `data/update-sources` with a `@nusawilayah/data` patch changeset and the build output. `dist/` and `export/` stay build outputs, so the PR is only those two files. PRs opened with `GITHUB_TOKEN` do not trigger CI; close and reopen the PR to run it.
 
-First run: all 91,599 kode match in both directions; 11 names differ, e.g. `73.26.03.1004` Nanggala Sanpiak Satu vs Salu, `71.09` Kep. vs Kepulauan Siau Tagulandang Biaro.
-
-**Cache file names** now always end in `__<file name>`, so several files from one commit no longer share a cache path.
+Checked on 2 November 2026: both pinned sources hold the same file contents as upstream's latest, so there is no data update yet.
 
 ## Not done yet
 
-- monthly workflow that checks the source and opens a data PR (PRD)
 - Gate 1: use the picker in a real project
 - lint and Storybook in CI, Next.js Pages Router test, Lighthouse score
