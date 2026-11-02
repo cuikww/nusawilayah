@@ -52,3 +52,34 @@ describe('createWilayah', () => {
     spy.mockRestore();
   });
 });
+
+describe('persistent cache', () => {
+  const memoryStore = () => {
+    const m = new Map<string, { t: number; v: unknown }>();
+    return { m, get: async (k: string) => m.get(k), set: async (k: string, v: { t: number; v: unknown }) => { m.set(k, v); } };
+  };
+
+  it('serves repeat visits from the store without fetching', async () => {
+    const store = memoryStore();
+    const fetcher = vi.fn(async () => [['51', 'Bali']]);
+    expect(await createWilayah({ fetcher, cache: store }).provinsi()).toHaveLength(1);
+    expect(await createWilayah({ fetcher, cache: store }).provinsi()).toHaveLength(1); // a new page load
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect([...store.m.keys()]).toEqual(['custom|provinsi.json']);
+  });
+
+  it('refetches expired entries and ignores a broken store', async () => {
+    const store = memoryStore();
+    store.m.set('custom|provinsi.json', { t: 0, v: [['99', 'Stale']] });
+    const fetcher = vi.fn(async () => [['51', 'Bali']]);
+    expect((await createWilayah({ fetcher, cache: store }).provinsi())[0].nama).toBe('Bali');
+
+    const broken = { get: async () => { throw new Error('quota'); }, set: async () => { throw new Error('quota'); } };
+    expect((await createWilayah({ fetcher, cache: broken }).provinsi())[0].nama).toBe('Bali');
+  });
+
+  it('falls back to memory where IndexedDB does not exist', async () => {
+    const fetcher = vi.fn(async () => [['51', 'Bali']]);
+    expect(await createWilayah({ fetcher, cache: 'indexeddb' }).provinsi()).toHaveLength(1);
+  });
+});

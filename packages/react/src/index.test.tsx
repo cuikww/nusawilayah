@@ -1,5 +1,6 @@
 import { createWilayah } from '@nusawilayah/core';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { labelsEn, WilayahPicker, type FieldProps } from './index.ts';
 
@@ -49,6 +50,25 @@ describe('WilayahPicker', () => {
     await pick('Provinsi', '52');
     expect(screen.getByLabelText('Kecamatan')).toHaveProperty('value', '');
     expect(screen.getByLabelText('Kode Pos')).toHaveProperty('value', '');
+  });
+
+  it('lets the user correct the kode pos', async () => {
+    const onChange = vi.fn();
+    const { container } = render(<WilayahPicker client={makeClient()} defaultValue="51.03.01.1001" onChange={onChange} name="alamat" />);
+    const kodePos = screen.getByLabelText('Kode Pos') as HTMLInputElement;
+    await waitFor(() => expect(kodePos.value).toBe('80361'));
+    await act(async () => { fireEvent.change(kodePos, { target: { value: '80-362x9' } }); });
+    expect(kodePos.value).toBe('80362');
+    expect(onChange.mock.lastCall![0].kodePos).toBe('80362');
+    expect((container.querySelector('input[name=alamat_kodepos]') as HTMLInputElement).value).toBe('80362');
+  });
+
+  it('renders server-loaded provinsi on the server, without fetching', async () => {
+    const provinsi = await makeClient().provinsi();
+    const fetcher = vi.fn();
+    const html = renderToString(<WilayahPicker client={createWilayah({ fetcher })} initialProvinsi={provinsi} />);
+    expect(html).toContain('<option value="51">Bali</option>');
+    expect(fetcher).not.toHaveBeenCalled();
   });
 
   it('loads a saved kode for edit forms (defaultValue)', async () => {

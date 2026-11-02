@@ -78,7 +78,17 @@ export const WilayahPicker = forwardRef<HTMLSelectElement | HTMLInputElement, Wi
       {showKodePos && (
         <div data-nw-field="kodePos">
           <label htmlFor={`${base}-kodepos`}>{labels.kodePos}</label>
-          <input id={`${base}-kodepos`} value={w.alamat.kodePos ?? ''} readOnly />
+          <input
+            id={`${base}-kodepos`}
+            value={w.alamat.kodePos ?? ''}
+            onChange={(e) => w.setKodePos(e.target.value.replace(/\D/g, '').slice(0, 5))}
+            onBlur={onBlur}
+            disabled={disabled}
+            inputMode="numeric"
+            autoComplete="postal-code"
+            pattern="\d{5}"
+            maxLength={5}
+          />
         </div>
       )}
       {name && <input type="hidden" name={name} value={w.kode ?? ''} />}

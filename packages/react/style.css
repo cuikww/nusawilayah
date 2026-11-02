@@ -1,0 +1,112 @@
+/*
+ * Optional default theme for @nusawilayah/react: import '@nusawilayah/react/style.css'.
+ * Everything is scoped to [data-nw-picker] and driven by these custom properties; override them on a parent.
+ */
+[data-nw-picker] {
+  --nw-gap: 0.75rem;
+  --nw-radius: 6px;
+  --nw-border: #767676;
+  --nw-bg: #fff;
+  --nw-fg: inherit;
+  --nw-focus: #0b57d0;
+  --nw-active-bg: #0b57d0;
+  --nw-active-fg: #fff;
+  --nw-error: #b3261e;
+  --nw-muted: #5f6368;
+
+  display: grid;
+  gap: var(--nw-gap);
+  position: relative;
+}
+
+[data-nw-picker] [data-nw-field] {
+  display: grid;
+  gap: 0.25rem;
+  position: relative;
+}
+
+[data-nw-picker] label {
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+[data-nw-picker] select,
+[data-nw-picker] input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px; /* touch target (WCAG 2.5.5) */
+  padding: 0 0.75rem;
+  border: 1px solid var(--nw-border);
+  border-radius: var(--nw-radius);
+  background: var(--nw-bg);
+  color: var(--nw-fg);
+  font: inherit;
+}
+
+[data-nw-picker] select:focus-visible,
+[data-nw-picker] input:focus-visible {
+  outline: 2px solid var(--nw-focus);
+  outline-offset: 1px;
+}
+
+[data-nw-picker] select:disabled,
+[data-nw-picker] input:disabled {
+  opacity: 0.6;
+}
+
+[data-nw-picker] [role='listbox'] {
+  position: absolute;
+  z-index: 10;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 0.25rem 0 0;
+  padding: 0.25rem 0;
+  max-height: 18rem;
+  overflow: auto;
+  list-style: none;
+  border: 1px solid var(--nw-border);
+  border-radius: var(--nw-radius);
+  background: var(--nw-bg);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+}
+
+[data-nw-picker] [role='listbox'][hidden] {
+  display: none;
+}
+
+[data-nw-picker] [role='option'] {
+  padding: 0.6rem 0.75rem;
+  min-height: 44px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+[data-nw-picker] [data-nw-active] {
+  background: var(--nw-active-bg);
+  color: var(--nw-active-fg);
+}
+
+[data-nw-picker] [data-nw-alias] {
+  opacity: 0.75;
+}
+
+[data-nw-picker] [data-nw-status]:empty {
+  display: none;
+}
+
+[data-nw-picker] [data-nw-status] {
+  color: var(--nw-muted);
+  font-size: 0.9em;
+}
+
+[data-nw-picker] [data-nw-error] {
+  color: var(--nw-error);
+  font-size: 0.9em;
+}
+
+[data-nw-picker] [data-nw-error] button {
+  min-height: 32px;
+  margin-left: 0.25rem;
+  font: inherit;
+}

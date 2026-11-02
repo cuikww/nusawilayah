@@ -25,6 +25,7 @@ await w.migrate('72.01.09.2012')     // { status: 'moved', kode: '72.01.24.2007'
 createWilayah()                                    // jsDelivr CDN (default)
 createWilayah({ baseUrl: '/wilayah' })             // self-hosted copy of node_modules/@nusawilayah/data/dist
 createWilayah({ fetcher: (path) => myLoad(path) }) // your API, bundled data, React Native
+createWilayah({ cache: 'indexeddb' })              // keep files in IndexedDB for 7 days (offline repeat visits)
 ```
 
 A custom fetcher must throw an error with `status: 404` for a file that does not exist.
@@ -48,6 +49,7 @@ const cascade = w.createCascade({ levels: 4 })
 cascade.subscribe((state) => render(state))   // state.levels[i]: { level, options, selected, loading, error }
 await cascade.select('provinsi', '51')         // clears the levels below and loads the kabupaten
 await cascade.setValue('51.03.01.1001')        // fills every level from one kode
+cascade.setKodePos('80362')                    // the user corrects the postal code
 cascade.retry('kabupaten')                     // after a network error
 ```
 

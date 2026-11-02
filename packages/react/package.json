@@ -4,7 +4,9 @@
   "description": "React <WilayahPicker> component and useWilayah hook for picking Indonesian regions",
   "license": "MIT",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": {
       "import": {
@@ -15,13 +17,15 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
-    }
+    },
+    "./style.css": "./style.css"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "style.css"
   ],
   "scripts": {
     "build": "tsup",
@@ -37,6 +41,7 @@
   "devDependencies": {
     "@testing-library/react": "^16.3.0",
     "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.3.0",
     "jsdom": "^26.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

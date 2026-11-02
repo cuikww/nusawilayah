@@ -22,11 +22,16 @@ export interface CascadeOptions {
   levels?: number;
   /** Restrict the provinsi options, e.g. ['51', '52']. */
   provinsi?: string[];
+  /**
+   * Provinsi options already loaded elsewhere, e.g. by a server component, so the first render has them and
+   * nothing is fetched for level 1.
+   */
+  initialProvinsi?: Wilayah[];
 }
 
 type Client = Pick<WilayahClient, 'provinsi' | 'children'>;
 
-export function createCascade(client: Client, { levels: n = 4, provinsi: only }: CascadeOptions = {}) {
+export function createCascade(client: Client, { levels: n = 4, provinsi: only, initialProvinsi }: CascadeOptions = {}) {
   if (!Number.isInteger(n) || n < 1 || n > 4) throw new Error(`nusawilayah: levels must be 1-4, got ${n}`);
 
   const empty = (level: Level): LevelState => ({ level, options: [], loading: false });
@@ -35,12 +40,15 @@ export function createCascade(client: Client, { levels: n = 4, provinsi: only }:
   const gen = Array<number>(n).fill(0); // bumped per level to drop stale responses
   const pending = Array<Promise<void>>(n).fill(Promise.resolve());
   let valueGen = 0;
+  let kodePos: string | undefined; // set by the user; cleared whenever the selection changes
 
   function update(fn: (levels: LevelState[]) => void) {
     const levels = state.levels.map((l) => ({ ...l }));
     fn(levels);
     const selected = levels.flatMap((l) => (l.selected ? [l.selected] : []));
-    state = { levels, alamat: toAlamat(selected), kode: selected.at(-1)?.kode };
+    const alamat = toAlamat(selected);
+    if (kodePos !== undefined) alamat.kodePos = kodePos || undefined;
+    state = { levels, alamat, kode: selected.at(-1)?.kode };
     for (const fn of listeners) fn(state);
   }
 
@@ -51,8 +59,7 @@ export function createCascade(client: Client, { levels: n = 4, provinsi: only }:
     update((l) => { l[i].loading = true; l[i].error = undefined; });
     return (pending[i] = (async () => {
       try {
-        let options = parent ? await client.children(parent) : await client.provinsi();
-        if (!parent && only) options = options.filter((o) => only.includes(o.kode));
+        const options = parent ? await client.children(parent) : filter(await client.provinsi());
         if (token === gen[i]) update((l) => { l[i].options = options; l[i].loading = false; });
       } catch (e) {
         if (token === gen[i]) update((l) => { l[i].loading = false; l[i].error = e as Error; });
@@ -71,6 +78,7 @@ export function createCascade(client: Client, { levels: n = 4, provinsi: only }:
     const i = indexOf(level);
     const selected = kode ? state.levels[i].options.find((o) => o.kode === kode) : undefined;
     if (kode && !selected) throw new Error(`nusawilayah: ${kode} is not an option at level ${LEVELS[i]}`);
+    kodePos = undefined;
     update((l) => {
       l[i].selected = selected;
       for (let j = i + 1; j < n; j++) { gen[j]++; l[j] = empty(l[j].level); }
@@ -92,7 +100,14 @@ export function createCascade(client: Client, { levels: n = 4, provinsi: only }:
     }
   }
 
-  const ready = loadOptions(0);
+  const filter = (options: Wilayah[]) => (only ? options.filter((o) => only.includes(o.kode)) : options);
+  let ready: Promise<void>;
+  if (initialProvinsi) {
+    update((l) => { l[0].options = filter(initialProvinsi); });
+    ready = Promise.resolve();
+  } else {
+    ready = loadOptions(0);
+  }
 
   return {
     getState: () => state,
@@ -106,6 +121,14 @@ export function createCascade(client: Client, { levels: n = 4, provinsi: only }:
       return choose(level, kode);
     },
     setValue,
+    /**
+     * Overrides the postal code taken from the desa data (postal codes are best-effort; let users correct them).
+     * '' clears it. The override is dropped as soon as the selection changes.
+     */
+    setKodePos(value: string) {
+      kodePos = value;
+      update(() => {});
+    },
     /** Reloads the options of a level that failed. */
     retry: (level: Level | number) => loadOptions(indexOf(level)),
     /** Resolves once the first provinsi list has loaded (or failed). */

@@ -1,6 +1,6 @@
 // Public entry: createWilayah() wires the loader, the data queries, search, migration and the cascade together.
 import { createCascade, type CascadeOptions } from './cascade.ts';
-import { cachedLoader, httpFetcher, isNotFound, LoadError, type Fetcher } from './loader.ts';
+import { cachedLoader, httpFetcher, indexedDbStore, isNotFound, LoadError, persistentFetcher, type Fetcher, type Store } from './loader.ts';
 import { createMigrate } from './migrate.ts';
 import { createSearch } from './search.ts';
 import { KODE, LEVELS, PARENT_KODE, toAlamat, toWilayah, type Alamat, type Row, type Wilayah } from './wilayah.ts';
@@ -8,7 +8,7 @@ import { KODE, LEVELS, PARENT_KODE, toAlamat, toWilayah, type Alamat, type Row, 
 export { LEVELS, displayName, formatPath, kodeOf } from './wilayah.ts';
 export { LoadError } from './loader.ts';
 export type { Alamat, Level, Wilayah } from './wilayah.ts';
-export type { Fetcher } from './loader.ts';
+export type { Fetcher, Store } from './loader.ts';
 export type { Cascade, CascadeOptions, CascadeState, LevelState } from './cascade.ts';
 export type { SearchOptions, SearchResult } from './search.ts';
 export type { Migration } from './migrate.ts';
@@ -21,12 +21,20 @@ export interface WilayahOptions {
    * `kabupaten/51.json`. For a missing file, throw an error with `status: 404`.
    */
   fetcher?: Fetcher;
+  /**
+   * `memory` (default): files are cached for the page's lifetime. `indexeddb`: also kept in IndexedDB for 7 days,
+   * so repeat visits load without the network. A custom `Store` works too (tests, React Native AsyncStorage).
+   */
+  cache?: 'memory' | 'indexeddb' | Store;
 }
 
 export const DEFAULT_BASE_URL = 'https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/dist';
 
-export function createWilayah({ baseUrl = DEFAULT_BASE_URL, fetcher }: WilayahOptions = {}) {
-  const loadRaw = cachedLoader(fetcher ?? httpFetcher(baseUrl));
+export function createWilayah({ baseUrl = DEFAULT_BASE_URL, fetcher, cache = 'memory' }: WilayahOptions = {}) {
+  const store = cache === 'memory' ? undefined : cache === 'indexeddb' ? indexedDbStore() : cache;
+  const source = fetcher ?? httpFetcher(baseUrl);
+  // Files of different data sources must not mix, so the persistent cache is namespaced by baseUrl.
+  const loadRaw = cachedLoader(store ? persistentFetcher(source, store, fetcher ? 'custom' : baseUrl) : source);
   const load = (path: string) => loadRaw(path).then((rows) => (rows as Row[]).map(toWilayah));
 
   /** All 38 provinsi. */

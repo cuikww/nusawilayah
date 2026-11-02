@@ -45,7 +45,8 @@ Store `alamat.desa.kode`; `defaultValue="51.03.01.1001"` restores the whole pick
 | `required`, `disabled`, `placeholder` | As on native inputs |
 | `labels` | Indonesian by default; pass `labelsEn` for English |
 | `components={{ Field }}` | Replace the dropdown with your own UI component (shadcn/ui, MUI) |
-| `client` | Your own `@nusawilayah/core` client (self-hosted data, custom fetcher) |
+| `client` | Your own `@nusawilayah/core` client (self-hosted data, custom fetcher, IndexedDB cache) |
+| `initialProvinsi` | Provinsi loaded by a server component, so the first HTML has them |
 
 ## React Hook Form
 
@@ -61,12 +62,12 @@ const { levels, select, setKode, retry, alamat } = useWilayah({ defaultValue: '5
 
 ## Styling and accessibility
 
-No CSS is bundled. Style with `className` and the `data-nw-field`, `data-nw-error`, `data-nw-active` attributes. Dropdowns are native `<select>` elements and search mode is an ARIA 1.2 combobox, tested with axe (WCAG 2.1 AA).
+Unstyled by default. Import the optional theme with `import '@nusawilayah/react/style.css'` (customise it with `--nw-*` CSS variables), or style with `className` and the `data-nw-field`, `data-nw-error`, `data-nw-active` attributes. The postal code field is editable, because postal codes are best-effort. Dropdowns are native `<select>` elements and search mode is an ARIA 1.2 combobox, tested with axe (WCAG 2.1 AA).
 
 ## Data
 
-By default the data loads from jsDelivr (`@nusawilayah/data`), under 1 KB per step. To self-host, copy `node_modules/@nusawilayah/data/dist` to a static folder and pass `client={createWilayah({ baseUrl: '/wilayah' })}`.
+By default the data loads from jsDelivr (`@nusawilayah/data`), under 1 KB per step. To self-host, run `npx nusawilayah copy public/wilayah` (with `@nusawilayah/data` installed) and pass `client={createWilayah({ baseUrl: '/wilayah' })}`. Add `cache: 'indexeddb'` to keep the data for repeat visits.
 
-Supports React 18 and 19. Marked `"use client"` for the Next.js App Router.
+Tested with React 18 and 19, Vite and the Next.js App Router. Marked `"use client"`; pass `initialProvinsi` from a server component to render the provinsi on the server.
 
 Full documentation and recipes: https://github.com/cuikww/nusawilayah · MIT License

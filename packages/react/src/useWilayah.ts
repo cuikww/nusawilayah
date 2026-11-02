@@ -16,11 +16,12 @@ let sharedClient: WilayahClient | undefined; // one cache for every picker on th
 const toKode = (v: string | Alamat | null | undefined) => (typeof v === 'string' ? v || undefined : v ? kodeOf(v) : undefined);
 
 /** Headless hook: render the cascading dropdowns with your own UI components. */
-export function useWilayah({ client, levels = 4, provinsi, defaultValue, value, onChange }: UseWilayahOptions = {}) {
+export function useWilayah({ client, levels = 4, provinsi, initialProvinsi, defaultValue, value, onChange }: UseWilayahOptions = {}) {
   const c = client ?? (sharedClient ??= createWilayah());
   // provinsiKey stands in for the array, so a new array literal on every render doesn't reset the picker
   const provinsiKey = provinsi?.join(',');
-  const cascade = useMemo(() => c.createCascade({ levels, provinsi }), [c, levels, provinsiKey]);
+  // initialProvinsi only seeds a new cascade, like defaultValue
+  const cascade = useMemo(() => c.createCascade({ levels, provinsi, initialProvinsi }), [c, levels, provinsiKey]);
   const state = useSyncExternalStore(cascade.subscribe, cascade.getState, cascade.getState);
 
   const onChangeRef = useRef(onChange);
@@ -53,5 +54,14 @@ export function useWilayah({ client, levels = 4, provinsi, defaultValue, value, 
     [cascade],
   );
 
-  return { ...state, select, setKode, retry: cascade.retry, client: c };
+  /** Overrides the postal code (users can correct it), then calls onChange. */
+  const setKodePos = useCallback(
+    (kodePos: string) => {
+      cascade.setKodePos(kodePos);
+      onChangeRef.current?.(cascade.getState().alamat);
+    },
+    [cascade],
+  );
+
+  return { ...state, select, setKode, setKodePos, retry: cascade.retry, client: c };
 }

@@ -110,3 +110,27 @@ describe('createCascade', () => {
     expect(() => c.select('desa', 'x')).toThrow('is not an option');
   });
 });
+
+describe('createCascade extras', () => {
+  it('starts from server-loaded provinsi without fetching them', async () => {
+    const fetcher = vi.fn(async (path: string) => files[path]);
+    const w = createWilayah({ fetcher });
+    const provinsi = await client().provinsi();
+    const c = w.createCascade({ initialProvinsi: provinsi, provinsi: ['51'] });
+    expect(c.getState().levels[0]).toMatchObject({ loading: false, options: [{ kode: '51' }] });
+    await c.select('provinsi', '51');
+    expect(fetcher.mock.calls.map((x) => x[0])).toEqual(['kabupaten/51.json']);
+  });
+
+  it('lets the user correct the kode pos until the selection changes', async () => {
+    const c = client().createCascade();
+    await c.setValue('51.03.01.1001');
+    c.setKodePos('80362');
+    expect(c.getState().alamat.kodePos).toBe('80362');
+    c.setKodePos('');
+    expect(c.getState().alamat.kodePos).toBeUndefined();
+    c.setKodePos('80363');
+    await c.select('desa', '51.03.01.1002');
+    expect(c.getState().alamat.kodePos).toBe('80361');
+  });
+});
