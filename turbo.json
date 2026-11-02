@@ -29,6 +29,11 @@
         "dist/**",
         "export/**"
       ]
+    },
+    "@nusawilayah/data#test": {
+      "dependsOn": [
+        "build"
+      ]
     }
   }
 }

@@ -42,6 +42,13 @@ CSV columns: `provinsi.csv` `kode,nama` · `kabupaten.csv` `kode,induk,nama,tipe
 
 The SQLite database also has the tables `alias` (former names) and `perubahan` (changes since the previous decree, for migrating saved addresses).
 
+## Self-hosting
+
+```sh
+npm install -D @nusawilayah/data
+npx nusawilayah copy public/wilayah   # copies dist/ (JSON only)
+```
+
 ## CDN
 
 ```

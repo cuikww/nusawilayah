@@ -6,10 +6,12 @@
   "files": [
     "dist",
     "export",
+    "bin/nusawilayah.mjs",
     "README.md"
   ],
   "scripts": {
-    "build": "pnpm --filter @nusawilayah/pipeline build:data"
+    "build": "pnpm --filter @nusawilayah/pipeline build:data",
+    "test": "node --test bin/*.test.mjs"
   },
   "repository": {
     "type": "git",
@@ -36,5 +38,8 @@
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "bin": {
+    "nusawilayah": "bin/nusawilayah.mjs"
   }
 }
