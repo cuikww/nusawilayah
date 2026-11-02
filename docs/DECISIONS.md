@@ -1,85 +1,101 @@
-# Keputusan teknis
+# Technical decisions
 
-Catatan keputusan yang diambil saat implementasi, sebagai pelengkap PRD.
+Decisions made during implementation, complementing the PRD. Newest sections last.
 
-## 2026-11-02 — Setup awal (minggu 1)
+## 2026-11-02: Initial setup (week 1)
 
-**Nama paket.** `nusawilayah` dan scope `@nusawilayah` belum dipakai di npm maupun GitHub (dicek 2026-11-02). Org npm dan GitHub perlu diamankan oleh pemilik proyek.
+**Package names.** `nusawilayah` and the `@nusawilayah` scope were unused on npm and GitHub (checked 2026-11-02).
 
-**Dasar hukum data: Kepmendagri No. 300.2.2-2430 Tahun 2025.** Header `db/wilayah.sql` di cahyadsn/wilayah masih menulis 300.2.2-2138, tetapi README repo tersebut menyatakan 2430, dan jumlah per level cocok dengan rekap 2430 (38 / 514 / 7.285 / 83.762). Yang dipakai: 2430.
+**Legal basis: Kepmendagri No. 300.2.2-2430 Tahun 2025.** The header of `db/wilayah.sql` in cahyadsn/wilayah still says 300.2.2-2138, but that repository's README states 2430, and the counts per level match the 2430 summary (38 / 514 / 7,285 / 83,762). We use 2430.
 
-**Sumber dipin per commit.** `pipeline/build.ts` mengunduh SQL dari commit tertentu, bukan dari branch, supaya build bisa diulang. Rilis data baru = ganti commit, lalu jalankan build.
+**Sources pinned per commit.** `pipeline/build.ts` downloads the SQL from a specific commit, not a branch, so builds are reproducible. A new data release = bump the commit and rebuild.
 
-**Format file data: tuple, bukan objek.** Baris disimpan sebagai `[kode, nama]`, dan level desa sebagai `[kode, nama, kodePos]`. `level`, `induk`, dan `tipe` diturunkan oleh core:
-- level: jumlah segmen kode
-- induk: kode tanpa segmen terakhir
-- tipe kabupaten/kota: nama diawali `Kota ` → `kota`, selain itu `kabupaten`
-- tipe desa/kelurahan: digit pertama segmen ke-4 `1` → `kelurahan`, `2` → `desa`, `3` (desa adat, Papua) → `desa`
+**Data files use tuples, not objects.** Rows are `[kode, nama]`, and `[kode, nama, kodePos]` at desa level. `level`, `induk` and `tipe` are derived:
+- level: number of kode segments
+- induk: kode without its last segment
+- kabupaten/kota type: name starts with `Kota ` → `kota`, else `kabupaten`
+- desa/kelurahan type: first digit of the 4th segment `1` → `kelurahan`, `2` → `desa`, `3` (desa adat, Papua) → `desa`
 
-Nama disimpan sesuai nama resmi, termasuk awalan "Kabupaten"/"Kota".
+Names are stored as official names, including the "Kabupaten"/"Kota" prefix.
 
-**Ukuran terukur (gzip):** kabupaten rata-rata 0,18 KB / terbesar 0,36 KB; kecamatan 0,18 / 0,45 KB; desa (termasuk kode pos) 0,17 / 0,85 KB. Target < 1 KB per langkah tercapai.
+**Measured sizes (gzip):** kabupaten files average 0.18 KB / max 0.36 KB; kecamatan 0.18 / 0.45 KB; desa (with postal codes) 0.17 / 0.85 KB. The < 1 KB per step target is met.
 
-**Indeks kode pos per 2 digit awalan** (`kodepos/80.json`): rata-rata 8 KB, terbesar 34 KB gzip. Ini lebih berat dari file per langkah, tetapi hanya dimuat saat lookup kode pos. Akan dipecah per 3 digit jika terbukti lambat.
+**Postal code index per 2-digit prefix** (`kodepos/80.json`): average 8 KB, max 34 KB gzip. Heavier than a step file, but only loaded for a postal code lookup. Split per 3 digits if it proves slow.
 
-**Pipeline tanpa transpiler.** Node 24 menjalankan TypeScript langsung (type stripping), jadi tidak perlu tsx/ts-node. Syarat: Node ≥ 24.
+**No transpiler for the pipeline.** Node 24 runs TypeScript directly (type stripping), so no tsx/ts-node. Requires Node ≥ 24.
 
-**Cache core: hanya memori untuk saat ini.** Gagal muat tidak disimpan di cache, sehingga bisa dicoba lagi (mendukung F3.6). Cache IndexedDB (F2.2) menyusul.
+**Core cache: memory only for now.** Failed loads are not cached, so they can be retried (PRD F3.6). IndexedDB cache (F2.2) later.
 
-**Validasi kode di core.** `children()` menolak kode yang tidak sesuai pola sebelum fetch, untuk mencegah path traversal di URL.
+**Kode validated in core.** `children()` rejects a kode that does not match the pattern before fetching, so a kode can never become a path like `../x`.
 
-## 2026-11-02 — v0.1: cascade + React
+## 2026-11-02: v0.1, cascade + React
 
-**Cascade di core, React hanya adapter.** `createCascade()` menyimpan state (pilihan, opsi, loading, error per level) dan memberi `subscribe`. React membacanya lewat `useSyncExternalStore`. Adapter Vue nanti cukup menulis ulang lapisan tipis ini.
+**Cascade state lives in core; React is only an adapter.** `createCascade()` holds selection, options, loading and error per level and offers `subscribe`. React reads it with `useSyncExternalStore`. A Vue adapter only needs to rewrite this thin layer.
 
-**Race condition ditangani di core.** Respons yang terlambat dari pilihan lama dibuang, sehingga pengguna yang cepat berganti provinsi tidak melihat kabupaten yang salah. Pilihan pengguna juga membatalkan `setValue` yang masih berjalan.
+**Race conditions handled in core.** Late responses for an old selection are dropped, so a user switching provinces quickly never sees the wrong kabupaten. A user selection also cancels a `setValue` still in progress.
 
-**`byPostalCode` mengembalikan `[]` hanya untuk 404.** Error jaringan tetap dilempar dan tidak disembunyikan. Fetcher kustom harus melempar error dengan `status: 404` untuk file yang tidak ada.
+**`byPostalCode` returns `[]` only on 404.** Network errors are thrown, not hidden. A custom fetcher must throw an error with `status: 404` for a missing file.
 
-**Dropdown memakai `<select>` native secara default.** Aksesibilitas dan mobile langsung beres tanpa kode ARIA tambahan. UI lain dipasang lewat `components.Field`. Tidak ada CSS bawaan.
+**Native `<select>` by default.** Accessibility and mobile work without extra ARIA code. Other UIs plug in through `components.Field`. No bundled CSS.
 
-**Hidden input untuk form HTML:** `{name}` = kode terdalam, `{name}_kodepos` = kode pos.
+**Hidden inputs for HTML forms:** `{name}` = deepest kode, `{name}_kodepos` = postal code.
 
-**Kode pos hanya ditampilkan (read-only)** dari data desa. Input kode pos yang mengisi wilayah balik (F3.3 arah sebaliknya) memakai `byPostalCode` dan menyusul di UI.
+**Postal code is read-only**, taken from the desa data. Reverse lookup (postal code → wilayah, F3.3) uses `byPostalCode`, exposed in search mode.
 
-**Ukuran bundle terukur:** core 2,2 KB + react 1,7 KB gzip (target < 15 KB).
+**Measured bundle size:** core 2.2 KB + react 1.7 KB gzip (target < 15 KB).
 
-**Klien bersama.** Semua `<WilayahPicker>` tanpa prop `client` memakai satu klien, sehingga cache dibagi.
+**Shared client.** Every `<WilayahPicker>` without a `client` prop uses one client, so the cache is shared.
 
-**Rilis:** Changesets + GitHub Actions, provenance npm. Versi pertama kode 0.1.0. Data mulai di 2025.2.0 (format `TAHUN.REVISI.patch`).
+**Releases:** Changesets + GitHub Actions, npm provenance. Code starts at 0.1.0. Data starts at 2025.2.0 (`YEAR.REVISION.patch`).
 
-## 2026-11-02 — v0.2: mode pencarian
+## 2026-11-02: v0.2, search mode
 
-**Indeks pencarian dua lapis.** Lapis pertama `search/nasional.json` (provinsi sampai kecamatan, 7.837 entri) selalu dimuat. Lapis kedua `search/{provinsi}.json` (desa) rata-rata 17 KB dan terbesar 59 KB gzip. Indeks desa hanya dimuat untuk provinsi yang relevan: yang dibatasi lewat `provinsi`, atau maksimal 3 provinsi teratas yang namanya cocok dengan salah satu kata kueri. Akibatnya, desa yang dicari tanpa menyebut induknya ("seminyak" saja) tidak ditemukan, sedangkan "seminyak kuta" atau "seminyak bali" ditemukan.
+**Two-tier search index.** Tier one, `search/nasional.json` (provinsi to kecamatan, 7,837 entries), is always loaded. Tier two, `search/{provinsi}.json` (desa), averages 17 KB and is at most 59 KB gzip. Desa indexes load only for relevant provinces: those set with `provinsi`, or at most the top 3 provinces whose names match a query word. So a village searched without naming a parent ("seminyak" alone) is not found, while "seminyak kuta" or "seminyak bali" is.
 
-**Aturan cocok:** setiap kata kueri harus menjadi awalan dari salah satu kata di nama wilayah atau nama induknya, dan minimal satu kata cocok dengan nama wilayah itu sendiri. Kata "kabupaten/kab/kecamatan/kec/desa/kelurahan/kel/provinsi/prov" diabaikan. Kata "kota" tidak diabaikan karena membedakan Kota Bogor dari Kabupaten Bogor. Huruf besar/kecil, aksen, dan apostrof diabaikan ("bau" cocok dengan "Ba'u").
+**Matching rule:** every query word must prefix a word of the wilayah name or of its parents' names, and at least one must match the wilayah itself. The words kabupaten/kab/kecamatan/kec/desa/kelurahan/kel/provinsi/prov are ignored. "kota" is kept because it tells Kota Bogor from Kabupaten Bogor. Case, accents and apostrophes are ignored ("bau" matches "Ba'u").
 
-**Peringkat:** nama yang persis sama dengan kueri lebih dulu ("Kota X" dianggap persis untuk "x"), lalu yang diawali kueri, lalu level yang lebih tinggi, lalu nama yang lebih pendek.
+**Ranking:** exact name first ("Kota X" counts as exact for "x"), then names starting with the query, then higher levels, then shorter names.
 
-**Kode pos di kolom pencarian.** Lima digit diperlakukan sebagai kode pos. Ini memenuhi F3.3 arah balik: jika satu kode pos mencakup beberapa desa, pengguna memilih dari daftar.
+**Postal codes in the search box.** Five digits are treated as a postal code. This covers the reverse direction of F3.3: when one postal code covers several desa, the user picks from the list.
 
-**Label tampilan** membuang awalan "Kabupaten " ("Kuta, Badung, Bali") tapi mempertahankan "Kota " supaya tidak ambigu.
+**Display labels** drop the "Kabupaten " prefix ("Kuta, Badung, Bali") but keep "Kota " to stay unambiguous.
 
-**Combobox ARIA 1.2** untuk mode search: input `role=combobox`, `listbox`/`option`, `aria-activedescendant`, `role=status` untuk "tidak ditemukan". Diuji axe (WCAG 2.1 AA) di Chrome sungguhan: 0 pelanggaran.
+**ARIA 1.2 combobox** for search mode: input `role=combobox`, `listbox`/`option`, `aria-activedescendant`, `role=status` for "no results". Tested with axe (WCAG 2.1 AA) in real Chrome: 0 violations.
 
-**Uji browser:** `apps/example-vite` (data self-host lewat `publicDir`) + Playwright memakai Chrome yang terpasang (`channel: 'chrome'`), dijalankan di CI.
+**Browser tests:** `apps/example-vite` (data self-hosted via `publicDir`) + Playwright using the installed Chrome (`channel: 'chrome'`), run in CI.
 
-**Ukuran bundle v0.2:** core 3,3 KB + react 3,0 KB gzip (target < 15 KB).
+**Bundle size v0.2:** core 3.3 KB + react 3.0 KB gzip (target < 15 KB).
 
-**Versi data `2025.2.1`:** penambahan indeks pencarian adalah patch, karena data wilayah tidak berubah. URL CDN `@2025.2` otomatis mengikuti.
+**Data version `2025.2.1`:** adding search indexes is a patch, because no region data changed. The `@2025.2` CDN URL follows automatically.
 
-## 2026-11-02 — Rilis lewat Trusted Publishing
+## 2026-11-02: Releases through Trusted Publishing
 
-**Temuan:** rilis 0.1.0 dan 0.2.0 terbit memakai token `NPM_TOKEN`, tanpa provenance, meskipun `publishConfig.provenance: true`. Pertukaran token OIDC dilakukan oleh npm CLI (≥ 11.5.1), dan `pnpm publish` diam-diam memakai token kalau token tersedia.
+**Finding:** releases 0.1.0 and 0.2.0 were published with the `NPM_TOKEN` token and without provenance, despite `publishConfig.provenance: true`. The OIDC token exchange is done by the npm CLI (≥ 11.5.1), and `pnpm publish` silently uses a token when one is present.
 
-**Keputusan:** workflow Release dipecah. changesets/action hanya membuat PR versi, lalu step terpisah menjalankan `pnpm release` dengan npm terbaru, `id-token: write`, `NPM_CONFIG_PROVENANCE=true`, dan **tanpa token sama sekali**. Kalau trusted publisher belum diatur di npm, publish gagal dengan jelas, tidak diam-diam memakai token.
+**Decision:** the Release workflow is split. changesets/action only opens the version PR; a separate step runs `pnpm release` with the latest npm, `id-token: write`, `NPM_CONFIG_PROVENANCE=true` and **no token at all**. If the trusted publisher is not configured on npm, publishing fails loudly instead of falling back to a token.
 
-**Terverifikasi** di rilis core/react 0.2.1 dan data 2025.2.2: ketiganya terbit lewat trusted publisher GitHub dengan provenance. Token npm sudah tidak dipakai, dan publishing access setiap paket menolak token.
+**Verified** on core/react 0.2.1 and data 2025.2.2: all three were published by the GitHub trusted publisher with provenance. npm tokens are no longer used, and each package's publishing access disallows tokens.
 
-## Belum dikerjakan
+## 2026-11-02: SQLite, CSV and SPEC.md (PRD F5.1–F5.3)
 
-- core: cache IndexedDB, alias nama lama di pencarian
-- React: render provinsi dari server (RSC)
+**One SQLite table, not one per level.** `wilayah(kode, nama, level, induk, tipe, kode_pos)` with indexes on `induk` and `kode_pos`. Every dropdown is `WHERE induk = ?`, a postal code lookup is `WHERE kode_pos = ?`, and a full address is one recursive CTE. `WITHOUT ROWID` saves about 0.4 MB (9.3 MB total, 1.8 MB gzip) and needs SQLite ≥ 3.8.2, which every supported Android/iOS version has.
+
+**CSV per level with only the columns that level uses** (F5.2), UTF-8 without BOM, LF, RFC 4180 quoting only where needed. A BOM helps Excel but breaks `LOAD DATA` and `COPY`; database import is the main use case.
+
+**Built with `node:sqlite`.** Node 24 ships SQLite, so the pipeline still has no runtime dependencies.
+
+**SQLite and CSV live in `export/`, not `dist/`.** Self-hosters copy `dist/` to their public folder; they should not ship 13 MB of exports with it. Both folders are in the npm package, so jsDelivr serves the exports at stable URLs (`@2025.2/export/nusawilayah.sqlite`) without a separate download host. The npm tarball grows from 2.3 MB to 4.9 MB, which only affects those who install `@nusawilayah/data` directly (the JS client loads from the CDN).
+
+**One source of domain rules.** `packages/core/src/wilayah.ts` (level, induk, tipe, display name) is imported by both the core client and the pipeline, so JSON, SQLite and CSV can never disagree on how a kode is interpreted. The file is pure TypeScript without TS-only syntax, so Node can run it directly.
+
+**Core split by responsibility:** `wilayah.ts` domain rules, `loader.ts` transport + cache, `search.ts`, `cascade.ts`, and `index.ts` wiring them together. The React package is split the same way: `labels`, `useWilayah`, `DefaultField`, `SearchField`, `WilayahPicker`.
+
+**English for code, errors and docs.** UI labels stay Indonesian by default (`labelsEn` exists), and the data keeps the official Indonesian terms (`kode`, `nama`, `provinsi`, ...), explained in the SPEC glossary.
+
+## Not done yet
+
+- core: IndexedDB cache, old-name aliases in search
+- React: server-rendered provinsi (RSC)
 - CLI `npx nusawilayah copy`
-- keluaran SQLite/CSV, `changes.json`, SPEC.md
-- waktu muat di HP kelas menengah
+- `changes.json` between data releases
+- load time on a mid-range phone

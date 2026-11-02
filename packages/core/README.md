@@ -1,6 +1,6 @@
 # @nusawilayah/core
 
-Klien headless tanpa dependensi untuk data wilayah Indonesia (Kepmendagri No. 300.2.2-2430 Tahun 2025). Memuat data sesuai kebutuhan, menyimpannya di cache, menyediakan pencarian di browser tanpa server, dan state dropdown bertingkat untuk adapter framework apa pun. Untuk React, pakai [`@nusawilayah/react`](https://www.npmjs.com/package/@nusawilayah/react).
+Headless, dependency-free client for Indonesian region data (Kepmendagri No. 300.2.2-2430 Tahun 2025). It loads data on demand, caches it, searches in the browser without a server, and holds cascading-dropdown state for any framework. About 3.5 KB gzipped. For React, use [`@nusawilayah/react`](https://www.npmjs.com/package/@nusawilayah/react).
 
 ```sh
 npm install @nusawilayah/core
@@ -9,39 +9,45 @@ npm install @nusawilayah/core
 ```ts
 import { createWilayah } from '@nusawilayah/core'
 
-const w = createWilayah()            // data dari jsDelivr
+const w = createWilayah()            // data from jsDelivr
 
-await w.provinsi()                   // 38 provinsi
-await w.children('51')               // kabupaten/kota di Bali
-await w.resolve('51.03.01.1001')     // { provinsi, kabupaten, kecamatan, desa, kodePos } untuk form edit
-await w.byPostalCode('80361')        // semua desa dengan kode pos ini
+await w.provinsi()                   // 38 provinsi: [{ kode: '11', nama: 'Aceh', level: 'provinsi' }, ...]
+await w.children('51')               // kabupaten/kota in Bali
+await w.resolve('51.03.01.1001')     // { provinsi, kabupaten, kecamatan, desa, kodePos } for edit forms
+await w.byPostalCode('80361')        // every desa with this postal code
 await w.search('denpasar sel')       // [{ wilayah, label: 'Denpasar Selatan, Kota Denpasar, Bali' }]
 ```
 
-## Sumber data
+## Data source
 
 ```ts
-createWilayah()                                   // CDN jsDelivr (default)
-createWilayah({ baseUrl: '/wilayah' })            // self-host: salin node_modules/@nusawilayah/data/dist
-createWilayah({ fetcher: (path) => myLoad(path) }) // API sendiri, bundle lokal, React Native
+createWilayah()                                    // jsDelivr CDN (default)
+createWilayah({ baseUrl: '/wilayah' })             // self-hosted copy of node_modules/@nusawilayah/data/dist
+createWilayah({ fetcher: (path) => myLoad(path) }) // your API, bundled data, React Native
 ```
 
-Fetcher kustom harus melempar error dengan `status: 404` untuk file yang tidak ada.
+A custom fetcher must throw an error with `status: 404` for a file that does not exist.
 
-## Pencarian
+## Search
 
-Pencarian cocok awalan, tidak membedakan huruf besar/kecil, mengabaikan kata "kabupaten/kecamatan/desa", dan menerima kode pos 5 digit. Indeks provinsi sampai kecamatan selalu dipakai. Indeks desa dimuat per provinsi hanya jika relevan, yaitu bila induknya disebut ("seminyak kuta") atau provinsinya dibatasi lewat `{ provinsi: ['51'] }`.
+Prefix matching, case- and accent-insensitive. The words kabupaten/kecamatan/desa are ignored ("kota" is kept to tell Kota Bogor from Kabupaten Bogor), and a 5-digit query is treated as a postal code. The provinsi-to-kecamatan index is always used. A province's village index loads only when relevant: when a parent is named ("seminyak kuta") or the search is restricted with `{ provinsi: ['51'] }`.
 
-## Dropdown bertingkat untuk framework lain
+```ts
+await w.search('kuta', { levels: 3, provinsi: ['51'], limit: 5 })
+```
+
+## Cascading dropdowns for other frameworks
 
 ```ts
 const cascade = w.createCascade({ levels: 4 })
-cascade.subscribe((state) => render(state))   // state.levels[i]: { options, selected, loading, error }
-await cascade.select('provinsi', '51')         // mengosongkan level di bawahnya lalu memuat kabupaten
-await cascade.setValue('51.03.01.1001')        // isi semua level dari satu kode
-cascade.retry('kabupaten')
+cascade.subscribe((state) => render(state))   // state.levels[i]: { level, options, selected, loading, error }
+await cascade.select('provinsi', '51')         // clears the levels below and loads the kabupaten
+await cascade.setValue('51.03.01.1001')        // fills every level from one kode
+cascade.retry('kabupaten')                     // after a network error
 ```
 
-ESM + CJS, tipe TypeScript disertakan, sekitar 3 KB gzip.
+Stale responses are dropped when the user switches quickly, failed loads can be retried, and invalid codes are rejected before any request.
 
-Dokumentasi lengkap: https://github.com/cuikww/nusawilayah · Lisensi MIT
+ESM + CJS with TypeScript types.
+
+Full documentation: https://github.com/cuikww/nusawilayah · MIT License

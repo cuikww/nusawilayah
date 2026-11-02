@@ -1,6 +1,8 @@
 # @nusawilayah/react
 
-Pemilih wilayah Indonesia untuk React: provinsi → kabupaten/kota → kecamatan → desa/kelurahan, plus kode pos. Datanya mengikuti **Kepmendagri No. 300.2.2-2430 Tahun 2025** (38 provinsi, 514 kabupaten/kota, 7.285 kecamatan, 83.762 desa/kelurahan).
+Indonesian region picker for React: provinsi → kabupaten/kota → kecamatan → desa/kelurahan, plus postal code. Uses the official **Kepmendagri No. 300.2.2-2430 Tahun 2025** data (38 provinces, 514 regencies/cities, 7,285 districts, 83,762 villages). About 3 KB gzipped; the data loads on demand from a CDN.
+
+![Cascade mode: Bali, Kabupaten Badung, Kuta, Tuban, postal code 80361](https://raw.githubusercontent.com/cuikww/nusawilayah/main/docs/images/cascade.png)
 
 ```sh
 npm install @nusawilayah/react
@@ -9,29 +11,41 @@ npm install @nusawilayah/react
 ```tsx
 import { WilayahPicker } from '@nusawilayah/react'
 
-// 4 dropdown bertingkat
+// four cascading dropdowns
 <WilayahPicker onChange={(alamat) => save(alamat)} />
 
-// satu kolom pencarian: "denpasar sel", "seminyak kuta", atau kode pos "80361"
+// one search box: "denpasar sel", "seminyak kuta" or the postal code "80361"
 <WilayahPicker mode="search" onChange={(alamat) => save(alamat)} />
 ```
 
-`onChange` menerima `{ provinsi, kabupaten, kecamatan, desa, kodePos }`. Setiap level berisi `{ kode, nama, level, tipe?, induk? }`, mis. `{ kode: '51.03.01.1001', nama: 'Tuban', ... }`.
+`onChange` receives an `Alamat` (address):
+
+```json
+{
+  "provinsi":  { "kode": "51", "nama": "Bali", "level": "provinsi" },
+  "kabupaten": { "kode": "51.03", "nama": "Kabupaten Badung", "level": "kabupaten", "induk": "51", "tipe": "kabupaten" },
+  "kecamatan": { "kode": "51.03.01", "nama": "Kuta", "level": "kecamatan", "induk": "51.03" },
+  "desa":      { "kode": "51.03.01.1001", "nama": "Tuban", "level": "desa", "induk": "51.03.01", "tipe": "kelurahan", "kodePos": ["80361"] },
+  "kodePos": "80361"
+}
+```
+
+Store `alamat.desa.kode`; `defaultValue="51.03.01.1001"` restores the whole picker from it.
 
 ## Props
 
-| Prop | Kegunaan |
+| Prop | Description |
 | --- | --- |
-| `mode` | `cascade` (default) atau `search` |
-| `levels` | 1 (provinsi) sampai 4 (desa, default) |
-| `defaultValue` / `value` | kode tersimpan untuk form edit, mis. `'51.03.01.1001'`; `value` juga menerima objek Alamat |
-| `onChange` | dipanggil dengan Alamat setiap pilihan berubah |
-| `name` | hidden input untuk form HTML: `{name}` = kode terdalam, `{name}_kodepos` = kode pos |
-| `provinsi` | batasi pilihan, mis. `['51', '52']` |
-| `required`, `disabled`, `placeholder` | seperti input biasa |
-| `labels` | label bawaan Bahasa Indonesia; `labelsEn` untuk Inggris |
-| `components={{ Field }}` | ganti field dropdown dengan komponen UI sendiri (shadcn/ui, MUI) |
-| `client` | klien `@nusawilayah/core` sendiri (self-host / fetcher kustom) |
+| `mode` | `'cascade'` (default) or `'search'` |
+| `levels` | 1 (provinsi) to 4 (desa, default) |
+| `onChange` | Called with the `Alamat` on every change |
+| `defaultValue` / `value` | Saved kode for edit forms, e.g. `'51.03.01.1001'`; `value` also accepts an `Alamat`, `null` clears |
+| `name` | Hidden inputs for HTML forms: `{name}` = deepest kode, `{name}_kodepos` = postal code |
+| `provinsi` | Restrict the provinces, e.g. `['51', '52']` |
+| `required`, `disabled`, `placeholder` | As on native inputs |
+| `labels` | Indonesian by default; pass `labelsEn` for English |
+| `components={{ Field }}` | Replace the dropdown with your own UI component (shadcn/ui, MUI) |
+| `client` | Your own `@nusawilayah/core` client (self-hosted data, custom fetcher) |
 
 ## React Hook Form
 
@@ -39,20 +53,20 @@ import { WilayahPicker } from '@nusawilayah/react'
 <Controller name="alamat" control={control} render={({ field }) => <WilayahPicker {...field} />} />
 ```
 
-## Hook headless
+## Headless hook
 
 ```tsx
 const { levels, select, setKode, retry, alamat } = useWilayah({ defaultValue: '51.03.01.1001' })
 ```
 
-## Gaya
+## Styling and accessibility
 
-Komponen ini tidak membawa CSS. Atur tampilan lewat `className` dan atribut `data-nw-field`, `data-nw-error`, `data-nw-active`. Dropdown memakai `<select>` native, dan mode pencarian memakai pola ARIA combobox (diuji axe untuk WCAG 2.1 AA).
+No CSS is bundled. Style with `className` and the `data-nw-field`, `data-nw-error`, `data-nw-active` attributes. Dropdowns are native `<select>` elements and search mode is an ARIA 1.2 combobox, tested with axe (WCAG 2.1 AA).
 
-## Sumber data
+## Data
 
-Secara default data dimuat sesuai kebutuhan dari jsDelivr (`@nusawilayah/data`), kurang dari 1 KB per langkah. Untuk self-host, salin `node_modules/@nusawilayah/data/dist` ke folder statis lalu berikan `client={createWilayah({ baseUrl: '/wilayah' })}`.
+By default the data loads from jsDelivr (`@nusawilayah/data`), under 1 KB per step. To self-host, copy `node_modules/@nusawilayah/data/dist` to a static folder and pass `client={createWilayah({ baseUrl: '/wilayah' })}`.
 
-Mendukung React 18 dan 19. Komponen ini ditandai `"use client"` untuk Next.js App Router.
+Supports React 18 and 19. Marked `"use client"` for the Next.js App Router.
 
-Dokumentasi lengkap: https://github.com/cuikww/nusawilayah · Lisensi MIT
+Full documentation and recipes: https://github.com/cuikww/nusawilayah · MIT License

@@ -1,28 +1,55 @@
 # @nusawilayah/data
 
-Data wilayah administrasi Indonesia dan kode pos menurut **Kepmendagri No. 300.2.2-2430 Tahun 2025**: 38 provinsi, 514 kabupaten/kota, 7.285 kecamatan, dan 83.762 desa/kelurahan. Data dipecah per wilayah induk dalam file JSON kecil (rata-rata 0,2 KB gzip). Paket ini dipakai oleh [`@nusawilayah/core`](https://www.npmjs.com/package/@nusawilayah/core), tapi juga bisa dibaca langsung dari bahasa apa pun.
+Indonesian administrative regions with postal codes, following **Kepmendagri No. 300.2.2-2430 Tahun 2025**: 38 provinsi, 514 kabupaten/kota, 7,285 kecamatan and 83,762 desa/kelurahan. Published in three forms:
 
-## Tata letak `dist/`
-
-| File | Isi | Bentuk baris |
+| Folder | Format | For |
 | --- | --- | --- |
-| `meta.json` | dasar hukum, tanggal build, jumlah per level, sumber | |
+| `dist/` | JSON split per parent region (about 0.2 KB gzip per file) | Web apps, loaded on demand by [`@nusawilayah/core`](https://www.npmjs.com/package/@nusawilayah/core) |
+| `export/nusawilayah.sqlite` | One SQLite database (9.3 MB) | Offline apps: Flutter, Android, iOS, Python, PHP |
+| `export/csv/{level}.csv` | One CSV per level | Importing into MySQL, PostgreSQL, spreadsheets |
+
+The full format is specified in [SPEC.md](https://github.com/cuikww/nusawilayah/blob/main/docs/SPEC.md).
+
+## `dist/` layout
+
+| File | Content | Row shape |
+| --- | --- | --- |
+| `meta.json` | version, legal basis, build date, counts, sources | |
 | `provinsi.json` | 38 provinsi | `[kode, nama]` |
-| `kabupaten/{provinsi}.json` | kabupaten/kota, mis. `kabupaten/51.json` | `[kode, nama]` |
-| `kecamatan/{kabupaten}.json` | mis. `kecamatan/51.03.json` | `[kode, nama]` |
-| `desa/{kecamatan}.json` | mis. `desa/51.03.01.json` | `[kode, nama, kodePos]` |
-| `kodepos/{2 digit}.json` | indeks balik kode pos | `{ "80361": [[kode, nama], ...] }` |
-| `search/nasional.json` | indeks pencarian provinsi sampai kecamatan | `[kode, nama]` |
-| `search/{provinsi}.json` | indeks pencarian desa per provinsi | `[kode, nama]` |
+| `kabupaten/{provinsi}.json` | kabupaten/kota, e.g. `kabupaten/51.json` | `[kode, nama]` |
+| `kecamatan/{kabupaten}.json` | e.g. `kecamatan/51.03.json` | `[kode, nama]` |
+| `desa/{kecamatan}.json` | e.g. `desa/51.03.01.json` | `[kode, nama, kodePos]` |
+| `kodepos/{2 digits}.json` | postal code index | `{ "80361": [[kode, nama], ...] }` |
+| `search/nasional.json` | search index, provinsi to kecamatan | `[kode, nama]` |
+| `search/{provinsi}.json` | search index of the desa per provinsi | `[kode, nama]` |
 
-Kode memakai format Kemendagri bertitik: `51` (Bali), `51.03` (Badung), `51.03.01` (Kuta), `51.03.01.1001` (Tuban). Untuk desa, digit pertama segmen ke-4 menunjukkan tipenya: `1` kelurahan, `2` desa, `3` desa adat.
+Kode is the dotted Kemendagri code: `51` (Bali), `51.03` (Badung), `51.03.01` (Kuta), `51.03.01.1001` (Tuban). For a desa, the first digit of the last segment gives its type: `1` kelurahan, `2` desa, `3` desa adat.
 
-CDN: `https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/dist/provinsi.json`
+## SQLite and CSV
 
-## Versi
+```sh
+curl -LO https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/export/nusawilayah.sqlite
+sqlite3 nusawilayah.sqlite "SELECT kode, nama FROM wilayah WHERE induk = '51'"
+```
 
-Versi paket ini memakai format `TAHUN.REVISI.patch`, terpisah dari versi kode. `2025.2.x` mengikuti Kepmendagri 2025 revisi kedua (No. 300.2.2-2430). Patch hanya menambah file atau memperbaiki, tanpa mengubah kode wilayah.
+| kode | nama | level | induk | tipe | kode_pos |
+| --- | --- | --- | --- | --- | --- |
+| `51.03` | Kabupaten Badung | kabupaten | `51` | kabupaten | |
+| `51.03.01.1001` | Tuban | desa | `51.03.01` | kelurahan | `80361` |
 
-## Lisensi & atribusi
+CSV columns: `provinsi.csv` `kode,nama` · `kabupaten.csv` `kode,induk,nama,tipe` · `kecamatan.csv` `kode,induk,nama` · `desa.csv` `kode,induk,nama,tipe,kode_pos`.
 
-Lisensi MIT. Bersumber dari [cahyadsn/wilayah](https://github.com/cahyadsn/wilayah) dan [cahyadsn/wilayah_kodepos](https://github.com/cahyadsn/wilayah_kodepos) (MIT, © cahya dsn). Kode dan nama wilayah berasal dari Kepmendagri No. 300.2.2-2430 Tahun 2025. Kode pos adalah saran dan bisa tidak akurat untuk sebagian desa.
+## CDN
+
+```
+https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/dist/provinsi.json
+https://cdn.jsdelivr.net/npm/@nusawilayah/data@2025.2/export/csv/desa.csv
+```
+
+## Versioning
+
+`YEAR.REVISION.PATCH`, independent of the code packages. `2025.2.x` follows the second 2025 decree (No. 300.2.2-2430). A patch only adds files or fixes the build, never changes a kode or nama.
+
+## License and attribution
+
+MIT. Derived from [cahyadsn/wilayah](https://github.com/cahyadsn/wilayah) and [cahyadsn/wilayah_kodepos](https://github.com/cahyadsn/wilayah_kodepos) (MIT, © cahya dsn). Region codes and names come from Kepmendagri No. 300.2.2-2430 Tahun 2025. Postal codes are best-effort and may be inaccurate for some villages.
