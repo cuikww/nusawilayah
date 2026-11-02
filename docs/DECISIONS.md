@@ -128,8 +128,12 @@ Names are stored as official names, including the "Kabupaten"/"Kota" prefix.
 
 **Measured on a simulated mid-range phone** (4x CPU slowdown, 4G with 150 ms latency, Next.js production build): provinsi visible at first paint (0.6 s from navigation, network-bound), hydrated at 2.4 s (mostly the Next.js runtime), next dropdown 0.4 s over the network and 24 ms from cache. The PRD's "< 100 ms to the provinsi dropdown" is met only in the sense that server rendering adds no wait after first paint; from navigation start it is bound by the network.
 
+## 2026-11-02: Next.js Pages Router
+
+**Tested inside `apps/example-next`**, not a second app: Next.js serves `app/` and `pages/` side by side, so `/pages-router` reuses `AddressForm` and the server client (`app/server.ts`) with `getServerSideProps`, and the same e2e tests run against `/` and `/pages-router`. One build covers both routers.
+
 ## Not done yet
 
 - monthly workflow that checks the source and opens a data PR (PRD)
 - Gate 1: use the picker in a real project
-- idn-area-data name comparison, lint and Storybook in CI, Next.js Pages Router test, Lighthouse score
+- idn-area-data name comparison, lint and Storybook in CI, Lighthouse score
