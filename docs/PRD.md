@@ -199,7 +199,7 @@ Batasan terpenting adalah ukuran: 83.762 desa tidak boleh pernah dimuat sekaligu
 | Performa | Dropdown berikutnya terisi setelah memilih (data sudah di cache) | di bawah 50 ms | ✅ 24 ms dengan CPU 4x lebih lambat |
 | Aksesibilitas | WCAG 2.1 AA: navigasi keyboard penuh, pola ARIA combobox, label terbaca screen reader | wajib | ✅ axe 0 pelanggaran di Chrome |
 | Mobile | Area sentuh minimal 44 px, bisa memakai `<select>` native di HP | wajib | ✅ `<select>` native; tema opsional memakai area sentuh 44 px |
-| Kompatibilitas | React 18 dan 19, Next.js App Router dan Pages Router, Vite | wajib | 🟡 diuji di CI: React 18 dan 19, Vite, Next.js App Router; Pages Router belum diuji |
+| Kompatibilitas | React 18 dan 19, Next.js App Router dan Pages Router, Vite | wajib | ✅ diuji di CI: React 18 dan 19, Vite, Next.js App Router dan Pages Router (`apps/example-next/pages`) |
 | Modul | ESM + CJS, tree-shakeable, tipe TypeScript disertakan | wajib | ✅ |
 | Dependensi | core tanpa dependensi; react hanya peer dependency React | wajib | ✅ |
 | Bahasa | Indonesia default, Inggris tersedia | wajib | ✅ `labelsEn` |
