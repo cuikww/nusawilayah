@@ -422,7 +422,7 @@ Treat `kode` as text everywhere: `51.10` is not the number `51.1`.
 - **Former names and changes** come from comparing older editions in the same source, per kode ([SPEC.md section 5](docs/SPEC.md#5-former-names-and-changes)).
 - **Postal codes** are best-effort and may be wrong for some villages. Let users correct them.
 
-Technical decisions are recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
+Requirements and their implementation status are in [docs/PRD.md](docs/PRD.md); technical decisions in [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## Development
 
@@ -444,7 +444,7 @@ packages/react     WilayahPicker, useWilayah, DefaultField, SearchField
 packages/data      generated data (dist/ JSON, export/ SQLite + CSV)
 pipeline           download → validate → split → write; history.ts aliases + changes; export.ts SQLite + CSV
 apps/example-vite  demo and browser tests
-docs               SPEC.md (data format), DECISIONS.md (why things are the way they are)
+docs               PRD.md (requirements + status checklist), SPEC.md (data format), DECISIONS.md (why)
 ```
 
 ### Releasing

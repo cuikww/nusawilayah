@@ -1,6 +1,6 @@
 # Technical decisions
 
-Decisions made during implementation, complementing the PRD. Newest sections last.
+Decisions made during implementation, complementing the [PRD](PRD.md). Newest sections last.
 
 ## 2026-11-02: Initial setup (week 1)
 
