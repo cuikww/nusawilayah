@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { toCsv, toRecords, writeSqlite } from './export.ts';
 import { aliases, diff, tidyName } from './history.ts';
-import { parseTuples, split, validate } from './lib.ts';
+import { crosscheck, parseCsv, parseTuples, split, validate } from './lib.ts';
 
 describe('parseTuples', () => {
   it('reads both dumps and unescapes SQL quotes', () => {
@@ -104,5 +104,28 @@ describe('history', () => {
       dihapus: [['51.03.01.2002', 'Hilang']],
       baru: [['51.03.01.2003', 'Baru']],
     });
+  });
+});
+
+describe('parseCsv', () => {
+  it('reads quoted fields with commas and "" escapes', () => {
+    expect(parseCsv('code,name\n12.07.28.1007,"Lubuk Pakam I,II"\n35.13.15.2017,"Soka""an"\n11,\n')).toEqual([
+      ['code', 'name'],
+      ['12.07.28.1007', 'Lubuk Pakam I,II'],
+      ['35.13.15.2017', 'Soka"an'],
+      ['11', ''],
+    ]);
+  });
+});
+
+describe('crosscheck', () => {
+  it('ignores punctuation and spacing, reports real differences and missing kodes', () => {
+    const ours: [string, string][] = [['35.07.10.2010', 'Urek-Urek'], ['11.07.14.2046', 'Mesjid Gogos'], ['51', 'Bali']];
+    const theirs = new Map([['35.07.10.2010', 'Urek - Urek.'], ['11.07.14.2046', 'Mesjid Gogo'], ['52', 'NTB']]);
+    expect(crosscheck(ours, theirs)).toEqual([
+      '11.07.14.2046 Mesjid Gogos ≠ Mesjid Gogo',
+      '51 Bali: missing in second source',
+      '52 NTB: only in second source',
+    ]);
   });
 });

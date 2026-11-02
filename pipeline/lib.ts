@@ -69,3 +69,27 @@ export function split(wilayah: [string, string][], kodepos: Map<string, string>,
   for (const [prefix, index] of Object.entries(byPos)) files.set(`kodepos/${prefix}.json`, index);
   return files;
 }
+
+/** Rows of an RFC 4180 CSV (quoted fields, "" escapes), header included. */
+export function parseCsv(csv: string): string[][] {
+  return csv.trim().split(/\r?\n/).map((line) =>
+    [...line.matchAll(/(?:^|,)(?:"((?:[^"]|"")*)"|([^,]*))/g)].map((m) => m[1]?.replaceAll('""', '"') ?? m[2]));
+}
+
+/**
+ * Compare names with a second source, per kode. Only letters and digits count, so "Batu Jong-Jong" matches
+ * "Batu Jong - Jong". Returns one line per difference; a report for review, never a build failure.
+ */
+export function crosscheck(ours: [string, string][], theirs: Map<string, string>): string[] {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const out: string[] = [];
+  const kodes = new Set<string>();
+  for (const [kode, nama] of ours) {
+    kodes.add(kode);
+    const other = theirs.get(kode);
+    if (other === undefined) out.push(`${kode} ${nama}: missing in second source`);
+    else if (norm(other) !== norm(nama)) out.push(`${kode} ${nama} ≠ ${other}`);
+  }
+  for (const [kode, nama] of theirs) if (!kodes.has(kode)) out.push(`${kode} ${nama}: only in second source`);
+  return out;
+}
