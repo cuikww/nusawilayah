@@ -1,6 +1,6 @@
 {
   "name": "@nusawilayah/core",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Headless Indonesian region picker client: on-demand data loading, cache, search and cascading state",
   "license": "MIT",
   "type": "module",
