@@ -28,9 +28,30 @@ Nama disimpan sesuai nama resmi, termasuk awalan "Kabupaten"/"Kota".
 
 **Validasi kode di core.** `children()` menolak kode yang tidak sesuai pola sebelum fetch, untuk mencegah path traversal di URL.
 
+## 2026-11-02 — v0.1: cascade + React
+
+**Cascade di core, React hanya adapter.** `createCascade()` menyimpan state (pilihan, opsi, loading, error per level) dan memberi `subscribe`. React membacanya lewat `useSyncExternalStore`. Adapter Vue nanti cukup menulis ulang lapisan tipis ini.
+
+**Race condition ditangani di core.** Respons yang terlambat dari pilihan lama dibuang, sehingga pengguna yang cepat berganti provinsi tidak melihat kabupaten yang salah. Pilihan pengguna juga membatalkan `setValue` yang masih berjalan.
+
+**`byPostalCode` mengembalikan `[]` hanya untuk 404.** Error jaringan tetap dilempar dan tidak disembunyikan. Fetcher kustom harus melempar error dengan `status: 404` untuk file yang tidak ada.
+
+**Dropdown memakai `<select>` native secara default.** Aksesibilitas dan mobile langsung beres tanpa kode ARIA tambahan. UI lain dipasang lewat `components.Field`. Tidak ada CSS bawaan.
+
+**Hidden input untuk form HTML:** `{name}` = kode terdalam, `{name}_kodepos` = kode pos.
+
+**Kode pos hanya ditampilkan (read-only)** dari data desa. Input kode pos yang mengisi wilayah balik (F3.3 arah sebaliknya) memakai `byPostalCode` dan menyusul di UI.
+
+**Ukuran bundle terukur:** core 2,2 KB + react 1,7 KB gzip (target < 15 KB).
+
+**Klien bersama.** Semua `<WilayahPicker>` tanpa prop `client` memakai satu klien, sehingga cache dibagi.
+
+**Rilis:** Changesets + GitHub Actions, provenance npm. Versi pertama kode 0.1.0. Data mulai di 2025.2.0 (format `TAHUN.REVISI.patch`).
+
 ## Belum dikerjakan
 
-- core: `resolve`, `search`, `byPostalCode`, `createCascade`, cache IndexedDB
-- `@nusawilayah/react`
+- core: `search` + indeks pencarian (mode search, v0.2), cache IndexedDB
+- React: mode search, input kode pos → wilayah, render provinsi dari server (RSC)
+- CLI `npx nusawilayah copy`
 - keluaran SQLite/CSV, `changes.json`, SPEC.md
-- pengukuran waktu muat di HP kelas menengah
+- uji di browser sungguhan (Playwright + aplikasi contoh) dan waktu muat di HP kelas menengah

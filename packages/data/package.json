@@ -3,8 +3,34 @@
   "version": "2025.2.0",
   "description": "Data wilayah Indonesia (Kepmendagri No. 300.2.2-2430 Tahun 2025) + kode pos, dipecah per wilayah induk dalam JSON",
   "license": "MIT",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "pnpm --filter @nusawilayah/pipeline build:data"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cuikww/nusawilayah.git",
+    "directory": "packages/data"
+  },
+  "homepage": "https://github.com/cuikww/nusawilayah#readme",
+  "bugs": "https://github.com/cuikww/nusawilayah/issues",
+  "keywords": [
+    "indonesia",
+    "wilayah",
+    "provinsi",
+    "kabupaten",
+    "kecamatan",
+    "desa",
+    "kelurahan",
+    "kode pos",
+    "kemendagri",
+    "region picker",
+    "address"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

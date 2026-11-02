@@ -30,5 +30,29 @@
   },
   "devDependencies": {
     "tsup": "^8.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cuikww/nusawilayah.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/cuikww/nusawilayah#readme",
+  "bugs": "https://github.com/cuikww/nusawilayah/issues",
+  "keywords": [
+    "indonesia",
+    "wilayah",
+    "provinsi",
+    "kabupaten",
+    "kecamatan",
+    "desa",
+    "kelurahan",
+    "kode pos",
+    "kemendagri",
+    "region picker",
+    "address"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }
