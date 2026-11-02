@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { toCsv, toRecords, writeSqlite } from './export.ts';
 import { aliases, diff } from './history.ts';
-import { EXPECTED, parseTuples, split, validate } from './lib.ts';
+import { crosscheck, EXPECTED, parseCsv, parseTuples, split, validate } from './lib.ts';
 
 interface Source { repo: string; commit: string; path: string }
 
@@ -20,6 +20,8 @@ const ARCHIVES = [
   { ...SOURCES.wilayah, path: 'db/archive/wilayah_2022.sql', dasarHukum: 'cahyadsn/wilayah archive wilayah_2022' },
   { ...SOURCES.wilayah, path: 'db/archive/wilayah_2023.sql', dasarHukum: 'Kepmendagri No. 100.1.1-6117 Tahun 2022' },
 ];
+// Second source for a name cross-check (PRD: differences are reported, never fail the build).
+const CROSSCHECK = { repo: 'fityannugroho/idn-area-data', commit: '6898b16904040ae94a6fc95d2db9b1f282b38367' };
 const DASAR_HUKUM = 'Kepmendagri No. 300.2.2-2430 Tahun 2025';
 const ATRIBUSI = 'Data © cahya dsn (MIT). Region codes and names from Kepmendagri No. 300.2.2-2430 Tahun 2025.';
 
@@ -30,8 +32,7 @@ const outDir = join(dataDir, 'dist');
 const exportDir = join(dataDir, 'export');
 
 async function source({ repo, commit, path }: Source) {
-  const suffix = path.startsWith('db/archive/') ? `__${path.split('/').pop()}` : '.sql';
-  const file = join(cacheDir, `${repo.replace('/', '__')}@${commit}${suffix}`);
+  const file = join(cacheDir, `${repo.replace('/', '__')}@${commit}__${path.split('/').pop()}`);
   if (!existsSync(file)) {
     const res = await fetch(`https://raw.githubusercontent.com/${repo}/${commit}/${path}`);
     if (!res.ok) throw new Error(`failed to download ${repo}/${path}: HTTP ${res.status}`);
@@ -49,6 +50,12 @@ if (errors.length) {
   console.error(`Validation failed (${errors.length}):\n` + errors.slice(0, 50).join('\n'));
   process.exit(1);
 }
+
+const second = new Map<string, string>();
+for (const level of ['provinces', 'regencies', 'districts', 'villages']) {
+  for (const row of parseCsv(await source({ ...CROSSCHECK, path: `data/${level}.csv` })).slice(1)) second.set(row[0], row.at(-1)!);
+}
+const crossDiffs = crosscheck(wilayah, second);
 
 const archives = await Promise.all(ARCHIVES.map(async (a) => parseTuples(await source(a))));
 const alias = aliases(wilayah, archives);
@@ -96,3 +103,5 @@ console.log(`nusawilayah.sqlite        ${kb(statSync(sqlite).size)}`);
 console.log(`alias: ${[...alias.values()].flat().length} old names for ${alias.size} wilayah`);
 const n = (k: 'gantiNama' | 'pindah' | 'dihapus' | 'baru') => changes[k].length;
 console.log(`changes since ${changes.dari}: ${n('gantiNama')} renamed, ${n('pindah')} moved, ${n('dihapus')} removed, ${n('baru')} new`);
+console.log(`names differing from ${CROSSCHECK.repo} (report only): ${crossDiffs.length}`);
+for (const line of crossDiffs.slice(0, 100)) console.log(`  ${line}`);

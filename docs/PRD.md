@@ -23,7 +23,7 @@ Legenda: `[x]` selesai · `[ ]` belum · 🟡 sebagian (penjelasan di catatan)
 2. Aktifkan GitHub Pages (Settings → Pages → Source: GitHub Actions) agar situs docs terbit
 3. Tanyakan asal data batas ke cahyadsn (Gerbang 3)
 
-**Di luar fase v0.1/v0.2, belum dikerjakan:** workflow bulanan cek sumber data, pembanding idn-area-data, lint dan Storybook di CI, skor Lighthouse.
+**Di luar fase v0.1/v0.2, belum dikerjakan:** pembanding idn-area-data, lint dan Storybook di CI, uji Next.js Pages Router, skor Lighthouse.
 
 ## Ringkasan
 
@@ -426,7 +426,7 @@ Setiap rilis data wajib lolos uji integritas otomatis; rilis kode wajib lolos uj
 
 - [x] Jumlah per level sama persis dengan tabel rekap Kepmendagri (38 / 514 / 7.285 / 83.762)
 - [x] Setiap kode unik, setiap anak punya induk, tidak ada wilayah yatim
-- [ ] Nama dibandingkan dengan sumber kedua (idn-area-data); selisih dicatat sebagai laporan, bukan gagal otomatis
+- [x] Nama dibandingkan dengan sumber kedua (idn-area-data); selisih dicatat sebagai laporan, bukan gagal otomatis — *Status:* dicetak di output build (commit idn-area-data di-pin); per 2 November 2026 semua 91.599 kode cocok, 11 nama berbeda
 - [ ] Setiap batas wilayah di peta punya pasangan kode di data, dan sebaliknya (v0.3)
 
 **Uji kode**
@@ -441,7 +441,7 @@ Setiap rilis data wajib lolos uji integritas otomatis; rilis kode wajib lolos uj
 
 - [ ] 🟡 Setiap PR: lint, typecheck, test, size-limit, build Storybook preview — *Status:* typecheck, test (termasuk React 18), size-limit, build data, dan e2e jalan; lint dan Storybook belum (playground di `apps/docs` mengambil peran preview)
 - [x] Rilis kode: Changesets untuk versi dan changelog per paket, publish ke npm dengan provenance — *Status:* lewat npm Trusted Publishing (OIDC), tanpa token
-- [ ] Rilis data: workflow bulanan mengecek apakah sumber data berubah; jika ya, membuka PR otomatis berisi data baru + changes.json untuk ditinjau manusia
+- [x] Rilis data: workflow bulanan mengecek apakah sumber data berubah; jika ya, membuka PR otomatis berisi data baru + changes.json untuk ditinjau manusia — *Status:* `data-update.yml`; PR hanya menaikkan commit sumber di `pipeline/build.ts` + changeset, karena `dist/` dan `changes.json` dibangun ulang saat build
 
 Versioning: kode memakai semver (0.x selama API belum stabil, 1.0 setelah dipakai di minimal 2 proyek nyata); data memakai TAHUN.REVISI seperti di bagian Distribusi.
 

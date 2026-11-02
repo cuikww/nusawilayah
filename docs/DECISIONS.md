@@ -128,12 +128,13 @@ Names are stored as official names, including the "Kabupaten"/"Kota" prefix.
 
 **Measured on a simulated mid-range phone** (4x CPU slowdown, 4G with 150 ms latency, Next.js production build): provinsi visible at first paint (0.6 s from navigation, network-bound), hydrated at 2.4 s (mostly the Next.js runtime), next dropdown 0.4 s over the network and 24 ms from cache. The PRD's "< 100 ms to the provinsi dropdown" is met only in the sense that server rendering adds no wait after first paint; from navigation start it is bound by the network.
 
-## 2026-11-02: Next.js Pages Router
+## 2026-11-02: Monthly data check
 
-**Tested inside `apps/example-next`**, not a second app: Next.js serves `app/` and `pages/` side by side, so `/pages-router` reuses `AddressForm` and the server client (`app/server.ts`) with `getServerSideProps`, and the same e2e tests run against `/` and `/pages-router`. One build covers both routers.
+**`.github/workflows/data-update.yml`** runs on the 1st of each month (and on demand). For each pinned source it compares the file's blob SHA at the pinned commit with the latest commit touching that file, not the commit SHAs: the pinned commit is usually the repo HEAD at the time, newer than the last commit touching the file, so comparing commits would open empty PRs. On a change it bumps the commit in `pipeline/build.ts`, runs the pipeline (integrity checks fail the run instead of opening a PR with bad data), and opens or updates one PR on `data/update-sources` with a `@nusawilayah/data` patch changeset and the build output. `dist/` and `export/` stay build outputs, so the PR is only those two files. PRs opened with `GITHUB_TOKEN` do not trigger CI; close and reopen the PR to run it.
+
+Checked on 2 November 2026: both pinned sources hold the same file contents as upstream's latest, so there is no data update yet.
 
 ## Not done yet
 
-- monthly workflow that checks the source and opens a data PR (PRD)
 - Gate 1: use the picker in a real project
-- idn-area-data name comparison, lint and Storybook in CI, Lighthouse score
+- lint and Storybook in CI, Next.js Pages Router test, Lighthouse score
