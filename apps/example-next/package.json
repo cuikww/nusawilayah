@@ -1,0 +1,27 @@
+{
+  "name": "example-next",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "data": "nusawilayah copy public/wilayah",
+    "dev": "pnpm data && next dev",
+    "build": "pnpm data && next build",
+    "start": "next start",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "@nusawilayah/core": "workspace:^",
+    "@nusawilayah/react": "workspace:^",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@nusawilayah/data": "workspace:^",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.9.0"
+  }
+}

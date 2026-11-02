@@ -23,5 +23,14 @@ jobs:
       - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm test
+      # Bundle budgets (.size-limit.json); fails the PR when a package grows past its limit
+      - run: pnpm size
       # Real-browser test of the example app (uses the runner's installed Chrome)
       - run: pnpm --filter example-vite e2e
+      # Docs + playground (IndexedDB cache, axe) and Next.js App Router (server-rendered provinsi, plain form submit)
+      - run: pnpm --filter docs e2e
+      - run: pnpm --filter example-next e2e
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+      # The same component tests against React 18 (peer range ^18 || ^19). Last, because it rewrites the lockfile.
+      - run: pnpm --filter @nusawilayah/react add -D react@^18.3.1 react-dom@^18.3.1 && pnpm --filter @nusawilayah/react test

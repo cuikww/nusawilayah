@@ -7,10 +7,13 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "changeset": "changeset",
-    "release": "turbo run build && changeset publish"
+    "release": "turbo run build --filter=./packages/* && changeset publish",
+    "size": "size-limit"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.0",
+    "@size-limit/preset-small-lib": "^14.3.0",
+    "size-limit": "^14.3.0",
     "turbo": "^2.5.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"

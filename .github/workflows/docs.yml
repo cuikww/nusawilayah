@@ -1,0 +1,45 @@
+name: Docs
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Deploys apps/docs (docs + playground, with self-hosted data) to GitHub Pages.
+# One-time setup: repo Settings → Pages → Source: GitHub Actions.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/cache@v4
+        with:
+          path: pipeline/.cache
+          key: sources-${{ hashFiles('pipeline/build.ts') }}
+      - run: pnpm install --frozen-lockfile
+      # build the packages and data the site depends on, then the site under /<repo>/
+      - run: pnpm turbo run build --filter=docs^...
+      - run: pnpm --filter docs build
+        env:
+          BASE: /${{ github.event.repository.name }}/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/docs/dist
+      - id: deploy
+        uses: actions/deploy-pages@v4
