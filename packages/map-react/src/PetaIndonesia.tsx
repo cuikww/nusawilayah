@@ -88,8 +88,9 @@ export function PetaIndonesia({
   const title = labels.title.replace('{level}', level);
 
   // Zoom to a region, or to every region inside it (a kabupaten on a kecamatan map).
+  const inZoom = (r: Region) => !zoomTo || r.kode === zoomTo || r.kode.startsWith(`${zoomTo}.`);
   const viewBox = useMemo(() => {
-    const inside = map?.regions.filter((r) => zoomTo && (r.kode === zoomTo || r.kode.startsWith(`${zoomTo}.`))) ?? [];
+    const inside = zoomTo ? map?.regions.filter(inZoom) ?? [] : [];
     if (!map || !inside.length) return map?.viewBox;
     const x0 = Math.min(...inside.map((r) => r.box[0])), y0 = Math.min(...inside.map((r) => r.box[1]));
     const x1 = Math.max(...inside.map((r) => r.box[0] + r.box[2])), y1 = Math.max(...inside.map((r) => r.box[1] + r.box[3]));
@@ -139,6 +140,7 @@ export function PetaIndonesia({
                 fill={v !== undefined ? fill(v) : data ? '#e5e7eb' : selected ? '#0b57d0' : '#cbd5e1'}
                 stroke={selected ? '#1a1a1a' : '#fff'}
                 strokeWidth={selected ? 2 : 0.75}
+                fillOpacity={inZoom(r) ? undefined : 0.35} // neighbours of the zoomed region fade out
                 vectorEffect="non-scaling-stroke"
                 style={onSelect ? { cursor: 'pointer', outline: 'none' } : undefined}
                 onClick={() => select(r)}

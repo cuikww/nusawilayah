@@ -63,6 +63,8 @@ describe('PetaIndonesia', () => {
     const full = project1000(svg);
     expect(x + w / 2).toBeGreaterThan(800); // centred on the eastern square
     expect(w / h).toBeCloseTo(full.w / full.h, 1); // same aspect ratio as the whole map: the page height never jumps
+    expect(container.querySelector('#kab-51-03')?.getAttribute('fill-opacity')).toBe('0.35'); // neighbours fade
+    expect(container.querySelector('#kab-51-71')?.hasAttribute('fill-opacity')).toBe(false);
     rerender(<PetaIndonesia level="kabupaten" provinsi="51" client={client()} zoomTo="51" />); // a parent: both squares
     await waitFor(() => expect(Number(container.querySelector('svg')!.getAttribute('viewBox')!.split(' ')[2])).toBeGreaterThan(1000));
   });
