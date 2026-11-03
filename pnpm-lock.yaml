@@ -67,6 +67,55 @@ importers:
         specifier: ^7.0.0
         version: 7.3.7(@types/node@24.19.2)
 
+  apps/example-map:
+    dependencies:
+      '@nusawilayah/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@nusawilayah/geo':
+        specifier: workspace:^
+        version: link:../../packages/geo
+      '@nusawilayah/map-react':
+        specifier: workspace:^
+        version: link:../../packages/map-react
+      '@nusawilayah/react':
+        specifier: workspace:^
+        version: link:../../packages/react
+      react:
+        specifier: ^19.0.0
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.1(react@19.3.1)
+    devDependencies:
+      '@axe-core/playwright':
+        specifier: ^4.10.0
+        version: 4.14.0(playwright-core@1.64.1)
+      '@nusawilayah/data':
+        specifier: workspace:^
+        version: link:../../packages/data
+      '@nusawilayah/geo-data':
+        specifier: workspace:^
+        version: link:../../packages/geo-data
+      '@playwright/test':
+        specifier: ^1.55.0
+        version: 1.64.1
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.19.2
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.3.0(@types/react@19.3.0)
+      '@vitejs/plugin-react':
+        specifier: ^5.0.0
+        version: 5.2.0(supports-color@7.2.0)(vite@7.3.7(@types/node@24.19.2))
+      vite:
+        specifier: ^7.0.0
+        version: 7.3.7(@types/node@24.19.2)
+
   apps/example-next:
     dependencies:
       '@nusawilayah/core':
@@ -148,6 +197,42 @@ importers:
         version: 8.5.1(postcss@8.5.32)(supports-color@7.2.0)(typescript@5.9.3)
 
   packages/data: {}
+
+  packages/geo:
+    devDependencies:
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.32)(supports-color@7.2.0)(typescript@5.9.3)
+
+  packages/geo-data: {}
+
+  packages/map-react:
+    dependencies:
+      '@nusawilayah/geo':
+        specifier: workspace:^
+        version: link:../geo
+    devDependencies:
+      '@testing-library/react':
+        specifier: ^16.3.0
+        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      jsdom:
+        specifier: ^26.0.0
+        version: 26.1.0(supports-color@7.2.0)
+      react:
+        specifier: ^19.0.0
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.1(react@19.3.1)
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(postcss@8.5.32)(supports-color@7.2.0)(typescript@5.9.3)
 
   packages/react:
     dependencies:

@@ -1,5 +1,44 @@
 [
-  { "name": "@nusawilayah/core", "path": "packages/core/dist/index.js", "gzip": true, "limit": "6 KB" },
-  { "name": "@nusawilayah/react alone (core and React excluded)", "path": "packages/react/dist/index.js", "ignore": ["react", "@nusawilayah/core"], "gzip": true, "limit": "5 KB" },
-  { "name": "import { WilayahPicker }: react + core, tree-shaken (PRD: under 15 KB)", "path": "packages/react/dist/index.js", "import": "{ WilayahPicker }", "ignore": ["react"], "gzip": true, "limit": "15 KB" }
+  {
+    "name": "@nusawilayah/core",
+    "path": "packages/core/dist/index.js",
+    "gzip": true,
+    "limit": "6 KB"
+  },
+  {
+    "name": "@nusawilayah/react alone (core and React excluded)",
+    "path": "packages/react/dist/index.js",
+    "ignore": [
+      "react",
+      "@nusawilayah/core"
+    ],
+    "gzip": true,
+    "limit": "5 KB"
+  },
+  {
+    "name": "import { WilayahPicker }: react + core, tree-shaken (PRD: under 15 KB)",
+    "path": "packages/react/dist/index.js",
+    "import": "{ WilayahPicker }",
+    "ignore": [
+      "react"
+    ],
+    "gzip": true,
+    "limit": "15 KB"
+  },
+  {
+    "name": "@nusawilayah/geo",
+    "path": "packages/geo/dist/index.js",
+    "gzip": true,
+    "limit": "3 KB"
+  },
+  {
+    "name": "import { PetaIndonesia }: map-react + geo (React excluded)",
+    "path": "packages/map-react/dist/index.js",
+    "import": "{ PetaIndonesia }",
+    "ignore": [
+      "react"
+    ],
+    "gzip": true,
+    "limit": "8 KB"
+  }
 ]
