@@ -34,6 +34,18 @@
       "dependsOn": [
         "build"
       ]
+    },
+    "@nusawilayah/geo-data#build": {
+      "dependsOn": [
+        "@nusawilayah/data#build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/pipeline/geo*.ts"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
     }
   }
 }

@@ -5,7 +5,8 @@
   "scripts": {
     "build:data": "node build.ts",
     "test": "vitest run",
-    "typecheck": "tsc -p ."
+    "typecheck": "tsc -p .",
+    "build:geo": "node geo.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
