@@ -134,8 +134,24 @@ Names are stored as official names, including the "Kabupaten"/"Kota" prefix.
 
 Checked on 2 November 2026: both pinned sources hold the same file contents as upstream's latest, so there is no data update yet.
 
+## 2026-11-03: v0.3 maps, unreleased until gate 3
+
+**Built on kyky's boundary pipeline** (`pipeline/geolib.ts`, `pipeline/geo.ts`): parses cahyadsn/wilayah_boundaries, swaps [lat, lng] to GeoJSON order, and fails unless every boundary pairs with a kode in the region data and the other way round. It passes for all 38 / 514 / 7,285. The repo now has provinsi boundaries (`db/prov/`), so the PRD's "dissolve kabupaten into provinsi" step is not needed.
+
+**`-clean` before `-simplify`.** In mapshaper, `-clean` after `-simplify` rebuilds the arcs at full resolution, which is why the first run produced a 299 KB provinsi map. Simplification is a distance per level (1 km / 300 m / 150 m) rather than a share of points, so detail is even across provinces of very different sizes: provinsi map 53 KB, largest kabupaten file 15 KB, largest kecamatan file 66 KB (gzip TopoJSON). The pipeline fails when a file exceeds its budget (150 / 50 / 100 KB).
+
+**One `@nusawilayah/geo-data` package instead of geo-provinsi/geo-kabupaten/geo-kecamatan.** Clients load one file per map from the CDN anyway, so splitting the npm package only helps self-hosters save disk; one package is simpler to version alongside `@nusawilayah/data`.
+
+**`@nusawilayah/geo` has no dependencies** (1.1 KB gzip): TopoJSON decoding and a fitted Mercator projection are about 100 lines, smaller than topojson-client + d3-geo. Mercator because Indonesia spans the equator (little distortion) and it matches web maps.
+
+**`<PetaIndonesia>`** (map-react + geo: 2.5 KB gzip) renders each region as a `<path>` with `role="button"`, its name (and value) as label, `aria-pressed` for the selected kode, and Enter/Space; axe reports 0 violations. `zoomTo` accepts a parent kode (a kabupaten on a kecamatan map) and keeps the full map's aspect ratio, so zooming never changes the map's height on the page. The choropleth uses five blues with a legend.
+
+**Picker ↔ map sync is not a feature of either package**: the app keeps one kode and derives both from it (`apps/example-map`). The map stays independent of the picker and of React-free uses.
+
+**Unreleased until gate 3.** geo-data, geo and map-react are `private`, and `apps/example-map` is not deployed (the docs site has no map): publishing the boundaries in any form would be distributing them before their origin and licence are known ([cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9)). When it is answered: set the licence (ODbL if OSM-derived), remove `private`, add the packages to Trusted Publishing, and add the map to the docs site.
+
 ## Not done yet
 
 - Gate 1: use the picker in a real project
 - lint and Storybook in CI, Lighthouse score
-- v0.3 maps; Gate 3 (boundary data origin) asked in cahyadsn/wilayah_boundaries#9, no answer yet
+- release the v0.3 map packages once gate 3 (boundary data origin, cahyadsn/wilayah_boundaries#9) is answered
