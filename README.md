@@ -3,6 +3,9 @@
 [![npm @nusawilayah/react](https://img.shields.io/npm/v/@nusawilayah/react?label=%40nusawilayah%2Freact)](https://www.npmjs.com/package/@nusawilayah/react)
 [![npm @nusawilayah/core](https://img.shields.io/npm/v/@nusawilayah/core?label=%40nusawilayah%2Fcore)](https://www.npmjs.com/package/@nusawilayah/core)
 [![npm @nusawilayah/data](https://img.shields.io/npm/v/@nusawilayah/data?label=%40nusawilayah%2Fdata)](https://www.npmjs.com/package/@nusawilayah/data)
+[![downloads](https://img.shields.io/npm/dm/@nusawilayah/react?label=downloads)](https://npm-stat.com/charts.html?package=%40nusawilayah%2Freact&package=%40nusawilayah%2Fcore&package=%40nusawilayah%2Fdata)
+[![size](https://img.shields.io/bundlephobia/minzip/@nusawilayah/react?label=react%20gzip)](https://bundlephobia.com/package/@nusawilayah/react)
+[![jsDelivr](https://data.jsdelivr.com/v1/package/npm/@nusawilayah/data/badge?style=rounded)](https://www.jsdelivr.com/package/npm/@nusawilayah/data)
 [![CI](https://github.com/cuikww/nusawilayah/actions/workflows/ci.yml/badge.svg)](https://github.com/cuikww/nusawilayah/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 

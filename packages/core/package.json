@@ -49,7 +49,20 @@
     "kode pos",
     "kemendagri",
     "region picker",
-    "address"
+    "address",
+    "alamat",
+    "kode-pos",
+    "kodepos",
+    "postal-code",
+    "wilayah-indonesia",
+    "data-wilayah",
+    "api-wilayah",
+    "dropdown",
+    "address-form",
+    "kepmendagri-2025",
+    "headless",
+    "vue",
+    "svelte"
   ],
   "publishConfig": {
     "access": "public",

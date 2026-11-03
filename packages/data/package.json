@@ -33,7 +33,22 @@
     "region picker",
     "address",
     "sqlite",
-    "csv"
+    "csv",
+    "alamat",
+    "kode-pos",
+    "kodepos",
+    "postal-code",
+    "wilayah-indonesia",
+    "data-wilayah",
+    "api-wilayah",
+    "dropdown",
+    "address-form",
+    "kepmendagri-2025",
+    "json",
+    "mysql",
+    "postgresql",
+    "laravel",
+    "flutter"
   ],
   "publishConfig": {
     "access": "public",

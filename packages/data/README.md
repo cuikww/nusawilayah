@@ -1,5 +1,7 @@
 # @nusawilayah/data
 
+[![npm](https://img.shields.io/npm/v/@nusawilayah/data)](https://www.npmjs.com/package/@nusawilayah/data) [![downloads](https://img.shields.io/npm/dm/@nusawilayah/data)](https://www.npmjs.com/package/@nusawilayah/data) [![provenance](https://img.shields.io/badge/npm-provenance-green)](https://www.npmjs.com/package/@nusawilayah/data#provenance)
+
 Indonesian administrative regions with postal codes, following **Kepmendagri No. 300.2.2-2430 Tahun 2025**: 38 provinsi, 514 kabupaten/kota, 7,285 kecamatan and 83,762 desa/kelurahan. Published in three forms:
 
 | Folder | Format | For |

@@ -1,5 +1,7 @@
 # @nusawilayah/react
 
+[![npm](https://img.shields.io/npm/v/@nusawilayah/react)](https://www.npmjs.com/package/@nusawilayah/react) [![downloads](https://img.shields.io/npm/dm/@nusawilayah/react)](https://www.npmjs.com/package/@nusawilayah/react) [![provenance](https://img.shields.io/badge/npm-provenance-green)](https://www.npmjs.com/package/@nusawilayah/react#provenance)
+
 Indonesian region picker for React: provinsi → kabupaten/kota → kecamatan → desa/kelurahan, plus postal code. Uses the official **Kepmendagri No. 300.2.2-2430 Tahun 2025** data (38 provinces, 514 regencies/cities, 7,285 districts, 83,762 villages). About 3 KB gzipped; the data loads on demand from a CDN.
 
 ![Cascade mode: Bali, Kabupaten Badung, Kuta, Tuban, postal code 80361](https://raw.githubusercontent.com/cuikww/nusawilayah/main/docs/images/cascade.png)

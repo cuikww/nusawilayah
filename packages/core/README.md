@@ -1,5 +1,7 @@
 # @nusawilayah/core
 
+[![npm](https://img.shields.io/npm/v/@nusawilayah/core)](https://www.npmjs.com/package/@nusawilayah/core) [![downloads](https://img.shields.io/npm/dm/@nusawilayah/core)](https://www.npmjs.com/package/@nusawilayah/core) [![provenance](https://img.shields.io/badge/npm-provenance-green)](https://www.npmjs.com/package/@nusawilayah/core#provenance)
+
 Headless, dependency-free client for Indonesian region data (Kepmendagri No. 300.2.2-2430 Tahun 2025). It loads data on demand, caches it, searches in the browser without a server, and holds cascading-dropdown state for any framework. About 3.5 KB gzipped. For React, use [`@nusawilayah/react`](https://www.npmjs.com/package/@nusawilayah/react).
 
 ```sh
