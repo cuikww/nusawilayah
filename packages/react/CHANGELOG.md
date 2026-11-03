@@ -1,5 +1,13 @@
 # @nusawilayah/react
 
+## 0.4.1
+
+### Patch Changes
+
+- b11b612: More npm keywords (alamat, kode-pos, dropdown, wilayah-indonesia, …) and README badges, so the packages are easier to find. No code or data changes.
+- Updated dependencies [b11b612]
+  - @nusawilayah/core@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes
