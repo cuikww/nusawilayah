@@ -17,7 +17,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: pipeline/.cache
-          key: sources-${{ hashFiles('pipeline/build.ts') }}
+          key: sources-${{ hashFiles('pipeline/build.ts', 'pipeline/geo.ts') }}
       - run: pnpm install --frozen-lockfile
       # build runs the data pipeline, which fails if any integrity check fails
       - run: pnpm build
@@ -32,5 +32,7 @@ jobs:
       - run: pnpm --filter example-next e2e
         env:
           NEXT_TELEMETRY_DISABLED: '1'
+      # Maps (v0.3): picker ↔ map sync, choropleth, axe. Local only: boundary data is not published before PRD gate 3.
+      - run: pnpm --filter example-map e2e
       # The same component tests against React 18 (peer range ^18 || ^19). Last, because it rewrites the lockfile.
       - run: pnpm --filter @nusawilayah/react add -D react@^18.3.1 react-dom@^18.3.1 && pnpm --filter @nusawilayah/react test

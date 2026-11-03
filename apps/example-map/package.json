@@ -1,0 +1,31 @@
+{
+  "name": "example-map",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "data": "nusawilayah copy public/data && node -e \"require('fs').cpSync('../../packages/geo-data/dist', 'public/geo', { recursive: true })\"",
+    "dev": "pnpm data && vite",
+    "build": "pnpm data && vite build",
+    "e2e": "playwright test",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@nusawilayah/core": "workspace:^",
+    "@nusawilayah/geo": "workspace:^",
+    "@nusawilayah/map-react": "workspace:^",
+    "@nusawilayah/react": "workspace:^",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@nusawilayah/data": "workspace:^",
+    "@nusawilayah/geo-data": "workspace:^",
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "vite": "^7.0.0"
+  }
+}

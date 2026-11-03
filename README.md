@@ -34,6 +34,7 @@
 - [Recipes](#recipes): forms, edit forms, React Hook Form, Formik, English labels, custom UI, styling, Next.js, self-hosting, offline
 - [Without React: `@nusawilayah/core`](#without-react-nusawilayahcore)
 - [Other languages: JSON, SQLite, CSV](#other-languages-json-sqlite-csv)
+- [Maps (v0.3, not released yet)](#maps-v03-not-released-yet)
 - [Data, versions and sources](#data-versions-and-sources)
 - [Development](#development)
 - [License and attribution](#license-and-attribution)
@@ -45,6 +46,7 @@
 | [`@nusawilayah/react`](packages/react) | `<WilayahPicker>` component and `useWilayah` hook | ~3 KB gzip |
 | [`@nusawilayah/core`](packages/core) | Headless client: data loading, cache, search, cascade state. No dependencies | ~3.5 KB gzip |
 | [`@nusawilayah/data`](packages/data) | The data: split JSON, a SQLite database and CSV files | loaded on demand |
+| [`@nusawilayah/map-react`](packages/map-react), [`geo`](packages/geo), [`geo-data`](packages/geo-data) | `<PetaIndonesia>`, headless map projection, boundaries (v0.3, not released yet) | ~2.5 KB gzip |
 
 The API uses the Indonesian names of the levels (`provinsi`, `kabupaten`, `kecamatan`, `desa`) because they are the official terms. See the [glossary](docs/SPEC.md#2-glossary).
 
@@ -406,6 +408,19 @@ createWilayah({ fetcher: (path) => myApi.get(`/wilayah/${path}`) }) // path e.g.
 
 A custom fetcher must throw an error with `status: 404` for a file that does not exist.
 
+## Maps (v0.3, not released yet)
+
+`<PetaIndonesia>` draws provinsi, kabupaten/kota and kecamatan with the same Kemendagri kode as the picker: click a region to fill the picker, pick in the picker to highlight and zoom the map, or colour regions from your own data.
+
+```tsx
+import { PetaIndonesia } from '@nusawilayah/map-react'
+
+<PetaIndonesia level="kabupaten" provinsi="51" value={kode} onSelect={(w) => setKode(w.kode)} />
+<PetaIndonesia data={{ '51': 120, '32': 340 }} />   // choropleth with legend
+```
+
+The boundary files (TopoJSON, GeoJSON for Leaflet/MapLibre/D3, and SVG with `id="kab-51-03"` per region for plain HTML) are built and tested, but **not published** until the origin of the boundary polygons is confirmed ([cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9)); if they derive from OpenStreetMap the map packages will be ODbL. Try it locally: `pnpm --filter example-map dev`. Boundaries are illustrative, not legal boundaries.
+
 ## Other languages: JSON, SQLite, CSV
 
 Every data release also ships a SQLite database and CSV files, built from the same validated data. The full format is in [docs/SPEC.md](docs/SPEC.md).
@@ -503,6 +518,7 @@ pnpm --filter example-vite e2e      # Playwright + axe in Chrome
 pnpm --filter docs e2e              # playground, IndexedDB cache, axe
 pnpm --filter example-next e2e      # Next.js production build: server rendering, form submit
 PERF=1 pnpm --filter example-next e2e perf         # load times on a simulated mid-range phone
+pnpm --filter example-map dev       # maps: picker ↔ map sync and a choropleth (local only)
 PREVIEW=1 pnpm --filter example-vite e2e preview   # regenerate docs/images
 ```
 
@@ -510,10 +526,14 @@ PREVIEW=1 pnpm --filter example-vite e2e preview   # regenerate docs/images
 packages/core      headless client (wilayah.ts domain rules, loader.ts, search.ts, cascade.ts, migrate.ts)
 packages/react     WilayahPicker, useWilayah, DefaultField, SearchField
 packages/data      generated data (dist/ JSON, export/ SQLite + CSV)
-pipeline           download → validate → split → write; history.ts aliases + changes; export.ts SQLite + CSV
+packages/geo       headless maps: TopoJSON decoding, Mercator projection, SVG paths
+packages/map-react <PetaIndonesia>
+packages/geo-data  generated boundaries (TopoJSON, GeoJSON, SVG), not published yet
+pipeline           download → validate → split → write; history.ts aliases + changes; export.ts SQLite + CSV; geo.ts boundaries
 apps/docs          docs + playground (GitHub Pages)
 apps/example-vite  minimal demo and browser tests
 apps/example-next  Next.js App Router example (server-rendered provinsi)
+apps/example-map   maps demo and browser tests (not deployed)
 docs               PRD.md (requirements + status checklist), SPEC.md (data format), DECISIONS.md (why)
 ```
 

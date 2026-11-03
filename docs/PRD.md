@@ -14,14 +14,14 @@ Legenda: `[x]` selesai · `[ ]` belum · 🟡 sebagian (penjelasan di catatan)
 | --- | --- |
 | v0.1 Fondasi | Selesai. **Gerbang 1** (dipakai di 1 proyek nyata) masih menunggu pemilik proyek |
 | v0.2 Pencarian | Selesai, **Gerbang 2** lolos (axe + size-limit di CI) |
-| v0.3 Peta | Bisa dimulai. **Gerbang 3** (asal data batas jelas) menahan *rilis* peta: sudah ditanyakan di [cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9), belum dijawab |
+| v0.3 Peta | Selesai dikerjakan, **belum dirilis**: paket peta `private` sampai **Gerbang 3** (asal data batas) jelas, ditanyakan di [cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9) |
 | v1.0 Stabil | Belum dimulai |
 
 **Berikutnya:**
 
 1. Gerbang 1: pakai picker di 1 proyek nyata
-2. v0.3: pipeline batas wilayah, `@nusawilayah/geo`, `<PetaIndonesia>`, choropleth, sinkron dengan picker
-3. Gerbang 3: tunggu jawaban asal data batas sebelum merilis paket peta
+2. Gerbang 3: tunggu jawaban asal data batas, lalu tentukan lisensi paket peta (MIT, atau ODbL bila turunan OSM) dan rilis
+3. v1.0: kunci API, adapter Vue, 2 co-maintainer, CONTRIBUTING.md
 
 **Di luar fase, belum dikerjakan:** lint dan Storybook di CI, skor Lighthouse, .zip di GitHub Releases, adapter sumber data kedua.
 
@@ -62,7 +62,7 @@ Tujuan utama: developer bisa memasang form alamat Indonesia yang lengkap dan cep
 - [x] Pencarian langsung ("kuta" langsung menyarankan Kuta, Badung, Bali)
 - [x] Ringan: memuat data hanya untuk level yang sedang dibuka
 - [x] Data selalu mengikuti Kepmendagri terbaru, dengan versi data yang jelas
-- [ ] Peta interaktif 38 provinsi sampai kecamatan dengan kode yang sama
+- [x] Peta interaktif 38 provinsi sampai kecamatan dengan kode yang sama — *Status:* selesai, belum dirilis (Gerbang 3)
 - [x] Inti headless, sehingga bisa dipakai di React, Vue, Svelte, atau vanilla JS — *Status:* core + adapter React; contoh Vue ada di README, adapter Vue resmi dijadwalkan v1.0
 
 **Non-tujuan**
@@ -104,8 +104,8 @@ Pengguna utama adalah developer web Indonesia yang membuat form alamat; pengguna
 - [x] Sebagai developer, saya mengganti tampilan dengan class Tailwind atau komponen UI saya sendiri (shadcn/ui, MUI).
 - [x] Sebagai pembeli, saya mengetik "denpasar sel" dan langsung memilih Kecamatan Denpasar Selatan.
 - [x] Sebagai pembeli, saya mengisi kode pos dan wilayahnya terisi otomatis (atau saya memilih jika satu kode pos mencakup beberapa desa). — *Status:* lewat kolom pencarian (`mode="search"`)
-- [ ] Sebagai developer dashboard, saya menampilkan peta kabupaten di Bali dan mewarnainya sesuai data penjualan.
-- [ ] Sebagai pengguna peta, saya mengklik sebuah kabupaten dan picker ikut terisi.
+- [x] Sebagai developer dashboard, saya menampilkan peta kabupaten di Bali dan mewarnainya sesuai data penjualan. — *Status:* `<PetaIndonesia data>` (belum dirilis)
+- [x] Sebagai pengguna peta, saya mengklik sebuah kabupaten dan picker ikut terisi. — *Status:* `apps/example-map` (belum dirilis)
 - [x] Sebagai developer, saya menyimpan data di server sendiri (tanpa CDN) untuk aplikasi internal atau offline.
 
 ## Lingkup & kebutuhan fungsional
@@ -117,8 +117,8 @@ Produk terdiri dari 5 paket dalam satu monorepo; v0.1 hanya merilis tiga paket p
 | @nusawilayah/data | Data wilayah + kode pos, dipecah per wilayah dalam JSON | v0.1 | ✅ terbit (2025.2.4) |
 | @nusawilayah/core | Logika headless: memuat data, cache, pencarian, state bertingkat | v0.1 | ✅ terbit (0.4.0) |
 | @nusawilayah/react | Komponen `<WilayahPicker>`, hook `useWilayah` | v0.1 | ✅ terbit (0.4.0) |
-| @nusawilayah/geo | Proyeksi dan render peta; data batas di paket terpisah per level (`geo-provinsi`, `geo-kabupaten`, `geo-kecamatan`) | v0.3 | ⬜ |
-| @nusawilayah/map-react | Komponen `<PetaIndonesia>` | v0.3 | ⬜ |
+| @nusawilayah/geo | Proyeksi dan render peta; data batas di paket terpisah per level (`geo-provinsi`, `geo-kabupaten`, `geo-kecamatan`) | v0.3 | 🟡 selesai, `private` sampai Gerbang 3; data batas dalam satu paket `@nusawilayah/geo-data` |
+| @nusawilayah/map-react | Komponen `<PetaIndonesia>` | v0.3 | 🟡 selesai, `private` sampai Gerbang 3 |
 
 ### F1. Data (@nusawilayah/data)
 
@@ -151,19 +151,19 @@ Produk terdiri dari 5 paket dalam satu monorepo; v0.1 hanya merilis tiga paket p
 
 ### F4. Peta (@nusawilayah/geo, @nusawilayah/map-react)
 
-- [ ] F4.1 Batas wilayah 38 provinsi, 514 kabupaten/kota, dan kecamatan, per file provinsi
-- [ ] F4.2 Tiga tingkat kehalusan garis (kasar untuk seluruh Indonesia, sedang untuk provinsi, halus untuk kabupaten)
-- [ ] F4.3 `<PetaIndonesia level="kabupaten" provinsi="51" />`: render SVG, hover, klik, zoom ke wilayah
-- [ ] F4.4 Mewarnai wilayah dari data sendiri (choropleth) lewat prop data dan colorScale
-- [ ] F4.5 Sinkron dua arah dengan `<WilayahPicker>` lewat kode Kemendagri yang sama
-- [ ] F4.6 Ekspor SVG statis (tanpa React) untuk dipakai di desain atau situs non-React
+- [x] F4.1 Batas wilayah 38 provinsi, 514 kabupaten/kota, dan kecamatan, per file provinsi — *Status:* `@nusawilayah/geo-data`; setiap batas berpasangan dengan kode data
+- [x] F4.2 Tiga tingkat kehalusan garis (kasar untuk seluruh Indonesia, sedang untuk provinsi, halus untuk kabupaten) — *Status:* toleransi 1 km / 300 m / 150 m
+- [x] F4.3 `<PetaIndonesia level="kabupaten" provinsi="51" />`: render SVG, hover, klik, zoom ke wilayah — *Status:* plus keyboard (Enter/Space) dan `zoomTo`
+- [x] F4.4 Mewarnai wilayah dari data sendiri (choropleth) lewat prop data dan colorScale — *Status:* dengan legenda
+- [x] F4.5 Sinkron dua arah dengan `<WilayahPicker>` lewat kode Kemendagri yang sama — *Status:* diuji di `apps/example-map`
+- [x] F4.6 Ekspor SVG statis (tanpa React) untuk dipakai di desain atau situs non-React — *Status:* file `.svg` per level per provinsi, dan `@nusawilayah/geo` untuk framework lain
 
 Peta berdiri sendiri. Paket peta tidak bergantung pada picker maupun React; keduanya hanya berbagi kode wilayah Kemendagri (mis. 51.03 = Badung). Cara pakai tanpa picker:
 
-- [ ] F4.7 File SVG statis per wilayah (mis. bali-kabupaten.svg) untuk `<img>`, Figma, atau presentasi
-- [ ] F4.8 SVG inline di HTML biasa (PHP, Laravel, WordPress); tiap wilayah punya id berbasis kode (kab-51-03) sehingga bisa diwarnai dengan CSS
-- [ ] F4.9 GeoJSON/TopoJSON yang langsung terbaca Leaflet, MapLibre, D3, ECharts, dan Highcharts untuk dashboard per wilayah
-- [ ] F4.10 Sinkron dengan `<WilayahPicker>` hanya opsional, untuk yang ingin klik peta mengisi form
+- [x] F4.7 File SVG statis per wilayah (mis. bali-kabupaten.svg) untuk `<img>`, Figma, atau presentasi — *Status:* nama file `kabupaten/51.svg`
+- [x] F4.8 SVG inline di HTML biasa (PHP, Laravel, WordPress); tiap wilayah punya id berbasis kode (kab-51-03) sehingga bisa diwarnai dengan CSS — *Status:* `prov-51`, `kab-51-03`, `kec-51-03-01`
+- [x] F4.9 GeoJSON/TopoJSON yang langsung terbaca Leaflet, MapLibre, D3, ECharts, dan Highcharts untuk dashboard per wilayah
+- [x] F4.10 Sinkron dengan `<WilayahPicker>` hanya opsional, untuk yang ingin klik peta mengisi form — *Status:* map-react hanya bergantung pada geo, tidak pada picker
 
 ### F5. Dukungan bahasa & platform lain
 
@@ -195,7 +195,7 @@ Batasan terpenting adalah ukuran: 83.762 desa tidak boleh pernah dimuat sekaligu
 | Ukuran kode | core + react digabung, gzip | di bawah 15 KB | ✅ 5,3 KB, dijaga size-limit di CI |
 | Ukuran data per langkah | Satu file anak wilayah, gzip | di bawah 1 KB (terukur 0,2 KB rata-rata, lihat Pipeline data) | ✅ rata-rata 0,2 KB, terbesar 0,85 KB |
 | Indeks pencarian | Dimuat hanya saat mode search dipakai: indeks nasional sampai kecamatan + indeks desa per provinsi | nasional 57 KB; desa per provinsi rata-rata 17 KB, terbesar 62 KB (gzip, terukur) | ✅ nasional 57 KB; desa rata-rata 16 KB, terbesar 60 KB |
-| Peta | Peta seluruh Indonesia, level provinsi, gzip | di bawah 150 KB | ⬜ v0.3 |
+| Peta | Peta seluruh Indonesia, level provinsi, gzip | di bawah 150 KB | ✅ 53 KB TopoJSON; build gagal bila melewati batas |
 | Performa | Dropdown berikutnya terisi setelah memilih (data sudah di cache) | di bawah 50 ms | ✅ 24 ms dengan CPU 4x lebih lambat |
 | Aksesibilitas | WCAG 2.1 AA: navigasi keyboard penuh, pola ARIA combobox, label terbaca screen reader | wajib | ✅ axe 0 pelanggaran di Chrome |
 | Mobile | Area sentuh minimal 44 px, bisa memakai `<select>` native di HP | wajib | ✅ `<select>` native; tema opsional memakai area sentuh 44 px |
@@ -301,7 +301,7 @@ Kondisi data batas mentah (diperiksa langsung pada file Bali):
 
 - Berupa perintah SQL INSERT dengan kolom kode, nama, lat, lng (titik tengah), dan path berisi koordinat sebagai teks
 - Urutan koordinat lintang dulu [lat, lng], sedangkan GeoJSON memakai bujur dulu [lng, lat]; pipeline wajib menukarnya
-- Tidak ada file batas level provinsi; batas provinsi dibentuk dengan menggabungkan kabupaten/kota di dalamnya (mapshaper -dissolve)
+- Tidak ada file batas level provinsi; batas provinsi dibentuk dengan menggabungkan kabupaten/kota di dalamnya (mapshaper -dissolve) — *Status:* sudah tidak berlaku: repo kini punya `db/prov/` (8 file), dan itu yang dipakai
 - Asal batasnya (BIG, OSM, atau olahan sendiri) belum tertulis di repo dan perlu dikonfirmasi ke pemiliknya
 
 Pengolahan peta: parse SQL, tukar urutan koordinat, gabungkan kabupaten menjadi provinsi, sederhanakan dengan mapshaper ke tiga tingkat kehalusan, lalu simpan sebagai TopoJSON (garis batas bersama disimpan sekali), GeoJSON, dan SVG, satu file per provinsi per level. *Status:* belum (v0.3).
@@ -389,7 +389,7 @@ Props utama `<WilayahPicker>`: mode (cascade | search), levels (1 sampai 4), val
 />
 ```
 
-*Status:* belum.
+*Status:* ada, dengan tambahan `value`, `zoomTo`, `colorScale`, `formatValue`, `labels` (belum dirilis).
 
 ## Distribusi & hosting data
 
@@ -411,7 +411,7 @@ File hasil konversi tidak disimpan di repo git; git hanya menyimpan skrip pipeli
 
 | Lokasi | Isi | Alasan | Status |
 | --- | --- | --- | --- |
-| npm (utama) | TopoJSON per provinsi, dipecah per level: @nusawilayah/geo-provinsi, geo-kabupaten, geo-kecamatan | Gratis; developer hanya memasang level yang dibutuhkan | ⬜ v0.3 |
+| npm (utama) | TopoJSON per provinsi, dipecah per level: @nusawilayah/geo-provinsi, geo-kabupaten, geo-kecamatan | Gratis; developer hanya memasang level yang dibutuhkan | 🟡 dibuat sebagai satu paket `@nusawilayah/geo-data`, belum dirilis (Gerbang 3) |
 | CDN jsDelivr / unpkg (otomatis) | File yang sama, langsung dari npm | Tanpa server sendiri, gratis, cepat di Indonesia | ✅ untuk data wilayah |
 | GitHub Releases | .zip SVG + GeoJSON siap unduh per level, plus SQLite dan CSV data wilayah | Untuk non-programmer, yang hanya butuh gambar, dan developer bahasa selain JavaScript | 🟡 SQLite dan CSV disajikan lewat npm/jsDelivr (`export/`), belum sebagai .zip di GitHub Releases (SVG + GeoJSON menyusul v0.3) |
 | Server developer (opsional) | Salinan lewat `npx nusawilayah copy` | Untuk aplikasi yang tidak boleh bergantung pada CDN | ✅ |
@@ -427,7 +427,7 @@ Setiap rilis data wajib lolos uji integritas otomatis; rilis kode wajib lolos uj
 - [x] Jumlah per level sama persis dengan tabel rekap Kepmendagri (38 / 514 / 7.285 / 83.762)
 - [x] Setiap kode unik, setiap anak punya induk, tidak ada wilayah yatim
 - [x] Nama dibandingkan dengan sumber kedua (idn-area-data); selisih dicatat sebagai laporan, bukan gagal otomatis — *Status:* dicetak di output build (commit idn-area-data di-pin); per 2 November 2026 semua 91.599 kode cocok, 11 nama berbeda
-- [ ] Setiap batas wilayah di peta punya pasangan kode di data, dan sebaliknya (v0.3)
+- [x] Setiap batas wilayah di peta punya pasangan kode di data, dan sebaliknya — *Status:* `pipeline/geo.ts` gagal bila ada yang tidak berpasangan
 
 **Uji kode**
 
@@ -459,7 +459,7 @@ Keputusan: sumber data utama adalah repo-repo cahyadsn yang berlisensi MIT, buka
 - [x] Kode proyek: MIT
 - [x] Data turunan: MIT, mencantumkan atribusi ke cahyadsn dan dasar hukum Kepmendagri di meta.json dan README
 - [x] Kode dan nama wilayah dari Kepmendagri adalah dokumen pemerintah; tetap dicantumkan nomor keputusannya
-- [ ] Batas wilayah di peta adalah ilustrasi, bukan batas hukum. README dan komponen peta mencantumkan penafian ini; batas resmi mengacu pada Kemendagri dan Badan Informasi Geospasial (BIG) (v0.3)
+- [x] Batas wilayah di peta adalah ilustrasi, bukan batas hukum. README dan komponen peta mencantumkan penafian ini; batas resmi mengacu pada Kemendagri dan Badan Informasi Geospasial (BIG)
 - [ ] Sebelum rilis peta, konfirmasi ke pemilik cahyadsn/wilayah_boundaries tentang asal data batasnya; jika turunan OpenStreetMap, paket geo-* dirilis dengan ODbL, kode dan data wilayah tetap MIT — *Status:* sudah ditanyakan ([#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9)), menunggu jawaban
 
 ## Roadmap & milestone
@@ -490,10 +490,10 @@ SQLite, CSV, dan SPEC.md ikut dirilis sejak v0.1 karena hanya keluaran tambahan 
 
 **v0.3 Peta (minggu 6 sampai 9)**
 
-- [ ] pipeline batas wilayah
-- [ ] PetaIndonesia
-- [ ] choropleth
-- [ ] sinkron dengan picker
+- [x] pipeline batas wilayah
+- [x] PetaIndonesia
+- [x] choropleth
+- [x] sinkron dengan picker
 - [ ] **Gerbang 3:** asal data batas jelas — *Status:* ditanyakan di [cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9) (2 November 2026), belum dijawab
 
 **v1.0 Stabil (minggu 10 sampai 12)**
@@ -520,8 +520,8 @@ Risiko terbesar adalah ketergantungan pada satu sumber data yang dirawat satu or
 | Sumber data berhenti diperbarui | Sedang | Tinggi | Adapter sumber yang bisa ditukar; bisa membaca lampiran Kepmendagri langsung sebagai cadangan | 🟡 sumber dipin per commit dan parser terpisah dari validasi; adapter sumber kedua belum |
 | Kepmendagri baru mengubah atau menghapus kode | Pasti terjadi | Sedang | changes.json per rilis + fungsi migrasi alamat tersimpan | ✅ `changes.json` + `migrate()` |
 | Kode pos tidak akurat (satu kode pos banyak desa, atau sebaliknya) | Tinggi | Sedang | Kode pos sebagai saran yang bisa diubah pengguna, bukan nilai wajib | ✅ kolom kode pos terisi otomatis tapi bisa diubah |
-| Peta terlalu berat di HP | Sedang | Sedang | Tiga tingkat kehalusan garis, file per provinsi, uji ukuran di CI | ⬜ v0.3 |
-| Sengketa batas wilayah | Rendah | Tinggi | Penafian "bukan batas hukum", ikuti versi Kemendagri tanpa penilaian sendiri | ⬜ v0.3 |
+| Peta terlalu berat di HP | Sedang | Sedang | Tiga tingkat kehalusan garis, file per provinsi, uji ukuran di CI | ✅ batas ukuran per level di pipeline + size-limit untuk kode peta |
+| Sengketa batas wilayah | Rendah | Tinggi | Penafian "bukan batas hukum", ikuti versi Kemendagri tanpa penilaian sendiri | ✅ penafian di komponen, README, dan meta.json |
 | CDN jsDelivr lambat atau diblokir | Rendah | Sedang | Mode self-host dan fetch kustom sejak v0.1 | ✅ |
 | Proyek bergantung pada satu maintainer | Tinggi | Tinggi | Dokumentasi kontribusi, label good first issue, ajak minimal 2 co-maintainer sebelum v1.0 | 🟡 dokumentasi + SPEC.md ada; 1 kolaborator aktif (kykyramadhani) |
 | Paket serupa muncul lebih dulu | Sedang | Rendah | Fokus pada kualitas UI dan aksesibilitas; terbuka untuk bergabung jika ada proyek yang lebih maju | ✅ axe WCAG 2.1 AA di CI |

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nusawilayah: peta + picker</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 64rem; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+      .layout { display: grid; grid-template-columns: 18rem 1fr; gap: 2rem; align-items: start; }
+      @media (max-width: 48rem) { .layout { grid-template-columns: 1fr; } }
+      [data-nw-region]:focus-visible { stroke: #1a1a1a; stroke-width: 3; }
+      [data-nw-region][role='button']:hover { opacity: 0.8; }
+      button { font: inherit; min-height: 44px; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

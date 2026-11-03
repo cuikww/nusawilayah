@@ -1,0 +1,57 @@
+{
+  "name": "@nusawilayah/geo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Headless Indonesian region maps: loads @nusawilayah/geo-data boundaries and projects them to SVG paths",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cuikww/nusawilayah.git",
+    "directory": "packages/geo"
+  },
+  "homepage": "https://github.com/cuikww/nusawilayah#readme",
+  "bugs": "https://github.com/cuikww/nusawilayah/issues",
+  "keywords": [
+    "indonesia",
+    "peta",
+    "map",
+    "svg",
+    "topojson",
+    "provinsi",
+    "kabupaten",
+    "kecamatan",
+    "choropleth"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
+}
