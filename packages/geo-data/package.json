@@ -17,7 +17,6 @@
     "directory": "packages/geo-data"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   }
 }

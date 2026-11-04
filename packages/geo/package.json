@@ -47,8 +47,7 @@
     "choropleth"
   ],
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "devDependencies": {
     "tsup": "^8.5.1"
