@@ -1,7 +1,6 @@
 {
   "name": "@nusawilayah/map-react",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "React <PetaIndonesia> map of Indonesian regions: choropleth, click to select, keyboard accessible",
   "license": "MIT",
   "type": "module",

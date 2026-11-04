@@ -1,0 +1,18 @@
+The boundaries in this package are adapted from:
+
+  Indonesia - Subnational Administrative Boundaries (COD-AB), version 01
+  Badan Pusat Statistik (BPS - Statistics Indonesia), OCHA Regional Office for Asia and the Pacific (ROAP)
+  https://data.humdata.org/dataset/cod-ab-idn
+
+licensed under the Creative Commons Attribution 3.0 IGO licence (CC BY 3.0 IGO):
+https://creativecommons.org/licenses/by/3.0/igo/legalcode
+
+Changes: units paired with Kemendagri No. 300.2.2-2430 Tahun 2025 kode and names, provinsi dissolved from
+kabupaten/kota, lakes and other non-region units removed, geometry simplified and converted to TopoJSON, GeoJSON
+and SVG by pipeline/geo.ts in https://github.com/cuikww/nusawilayah.
+
+This package is distributed under the same licence, CC BY 3.0 IGO. When you show these boundaries, credit:
+"Batas wilayah: BPS (2020) via HDX, CC BY 3.0 IGO". <PetaIndonesia> shows this line under every map.
+
+Neither BPS nor OCHA endorses this package or its use. Boundaries are illustrative, not legal boundaries;
+official boundaries are set by Kemendagri and Badan Informasi Geospasial (BIG).

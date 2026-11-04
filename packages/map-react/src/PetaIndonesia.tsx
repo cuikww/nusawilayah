@@ -23,7 +23,7 @@ export const petaLabelsEn: PetaLabels = {
   loading: 'Loading map…',
   retry: 'Retry',
   noData: 'no data',
-  disclaimer: 'Boundaries are illustrative, not legal boundaries. Official boundaries: Kemendagri and BIG.',
+  disclaimer: 'Boundaries: BPS (2020) via HDX, CC BY 3.0 IGO. Illustrative, not legal boundaries; official boundaries: Kemendagri and BIG.',
 };
 
 /** Five blues, light to dark: readable on white and distinguishable for common colour-vision deficiencies. */

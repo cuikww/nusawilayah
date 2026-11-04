@@ -1,7 +1,5 @@
 # @nusawilayah/geo
 
-> **Not published yet**: waits for the boundary data licence (see `@nusawilayah/geo-data`).
-
 Headless maps of Indonesian regions, without dependencies (about 1 KB gzip): loads `@nusawilayah/geo-data` TopoJSON and projects it to SVG paths. Works with any framework, or none.
 
 ```ts

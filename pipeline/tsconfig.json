@@ -1,1 +1,1 @@
-{ "extends": "../tsconfig.base.json", "compilerOptions": { "module": "NodeNext", "moduleResolution": "NodeNext" }, "include": ["*.ts"] }
+{ "extends": "../tsconfig.base.json", "compilerOptions": { "module": "NodeNext", "moduleResolution": "NodeNext", "target": "ES2024" }, "include": ["*.ts"] }

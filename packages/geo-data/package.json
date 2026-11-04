@@ -1,12 +1,12 @@
 {
   "name": "@nusawilayah/geo-data",
   "version": "2025.2.0",
-  "private": true,
   "description": "Indonesian administrative boundaries (provinsi, kabupaten/kota, kecamatan) as TopoJSON, GeoJSON and SVG, keyed by Kemendagri kode",
-  "license": "MIT",
+  "license": "CC-BY-3.0-IGO",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "pnpm --filter @nusawilayah/pipeline build:geo"
@@ -15,5 +15,9 @@
     "type": "git",
     "url": "git+https://github.com/cuikww/nusawilayah.git",
     "directory": "packages/geo-data"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

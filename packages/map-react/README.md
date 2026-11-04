@@ -1,7 +1,5 @@
 # @nusawilayah/map-react
 
-> **Not published yet**: waits for the boundary data licence (see `@nusawilayah/geo-data`).
-
 `<PetaIndonesia>`: an interactive SVG map of Indonesian regions, keyed by the same Kemendagri kode as `@nusawilayah/react`'s picker. About 2.5 KB gzip with `@nusawilayah/geo`.
 
 ```tsx

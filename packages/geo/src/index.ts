@@ -18,7 +18,8 @@ export interface GeoOptions {
 
 export const DEFAULT_GEO_BASE_URL = 'https://cdn.jsdelivr.net/npm/@nusawilayah/geo-data@2025.2/dist';
 
-export const DISCLAIMER = 'Batas wilayah adalah ilustrasi, bukan batas hukum. Batas resmi mengacu pada Kemendagri dan BIG.';
+/** Shown under every map: the boundary licence (CC BY 3.0 IGO) requires the attribution. */
+export const DISCLAIMER = 'Batas wilayah: BPS (2020) via HDX, CC BY 3.0 IGO. Ilustrasi, bukan batas hukum; batas resmi mengacu pada Kemendagri dan BIG.';
 
 export function createGeo({ baseUrl = DEFAULT_GEO_BASE_URL, fetcher }: GeoOptions = {}) {
   const base = baseUrl.replace(/\/$/, '');

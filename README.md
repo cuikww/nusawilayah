@@ -49,7 +49,7 @@
 | [`@nusawilayah/react`](packages/react) | `<WilayahPicker>` component and `useWilayah` hook | ~3 KB gzip |
 | [`@nusawilayah/core`](packages/core) | Headless client: data loading, cache, search, cascade state. No dependencies | ~3.5 KB gzip |
 | [`@nusawilayah/data`](packages/data) | The data: split JSON, a SQLite database and CSV files | loaded on demand |
-| [`@nusawilayah/map-react`](packages/map-react), [`geo`](packages/geo), [`geo-data`](packages/geo-data) | `<PetaIndonesia>`, headless map projection, boundaries (v0.3, not released yet) | ~2.5 KB gzip |
+| [`@nusawilayah/map-react`](packages/map-react), [`geo`](packages/geo), [`geo-data`](packages/geo-data) | `<PetaIndonesia>`, headless map projection, boundaries (v0.3, CC BY 3.0 IGO) | ~2.5 KB gzip |
 
 The API uses the Indonesian names of the levels (`provinsi`, `kabupaten`, `kecamatan`, `desa`) because they are the official terms. See the [glossary](docs/SPEC.md#2-glossary).
 
@@ -422,7 +422,7 @@ import { PetaIndonesia } from '@nusawilayah/map-react'
 <PetaIndonesia data={{ '51': 120, '32': 340 }} />   // choropleth with legend
 ```
 
-The boundary files (TopoJSON, GeoJSON for Leaflet/MapLibre/D3, and SVG with `id="kab-51-03"` per region for plain HTML) are built and tested, but **not published** until the origin of the boundary polygons is confirmed ([cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9)); if they derive from OpenStreetMap the map packages will be ODbL. Try it locally: `pnpm --filter example-map dev`. Boundaries are illustrative, not legal boundaries.
+The boundary files (TopoJSON, GeoJSON for Leaflet/MapLibre/D3, and SVG with `id="kab-51-03"` per region for plain HTML) come from the BPS boundaries on [HDX](https://data.humdata.org/dataset/cod-ab-idn) (valid on 1 April 2020, CC BY 3.0 IGO): all 38 provinsi and 514 kabupaten/kota, and about 96% of kecamatan (those created after 2020 are drawn inside the kecamatan they split from). The map shows the required attribution under it. Try it locally: `pnpm --filter example-map dev`. Boundaries are illustrative, not legal boundaries.
 
 ## Other languages: JSON, SQLite, CSV
 
@@ -531,7 +531,7 @@ packages/react     WilayahPicker, useWilayah, DefaultField, SearchField
 packages/data      generated data (dist/ JSON, export/ SQLite + CSV)
 packages/geo       headless maps: TopoJSON decoding, Mercator projection, SVG paths
 packages/map-react <PetaIndonesia>
-packages/geo-data  generated boundaries (TopoJSON, GeoJSON, SVG), not published yet
+packages/geo-data  generated boundaries (TopoJSON, GeoJSON, SVG), CC BY 3.0 IGO
 pipeline           download → validate → split → write; history.ts aliases + changes; export.ts SQLite + CSV; geo.ts boundaries
 apps/docs          docs + playground (GitHub Pages)
 apps/example-vite  minimal demo and browser tests
@@ -554,4 +554,4 @@ Issues and pull requests are welcome. Please run `pnpm build && pnpm test && pnp
 
 ## License and attribution
 
-Code: [MIT](LICENSE). Data: MIT, derived from [cahyadsn/wilayah](https://github.com/cahyadsn/wilayah) and [cahyadsn/wilayah_kodepos](https://github.com/cahyadsn/wilayah_kodepos) (MIT, © cahya dsn). Region codes and names come from Kepmendagri No. 300.2.2-2430 Tahun 2025.
+Code: [MIT](LICENSE). Data: MIT, derived from [cahyadsn/wilayah](https://github.com/cahyadsn/wilayah) and [cahyadsn/wilayah_kodepos](https://github.com/cahyadsn/wilayah_kodepos) (MIT, © cahya dsn). Region codes and names come from Kepmendagri No. 300.2.2-2430 Tahun 2025. Map boundaries (`@nusawilayah/geo-data` only): CC BY 3.0 IGO, from BPS and OCHA ROAP via [HDX](https://data.humdata.org/dataset/cod-ab-idn).

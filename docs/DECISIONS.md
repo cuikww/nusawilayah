@@ -148,10 +148,22 @@ Checked on 2 November 2026: both pinned sources hold the same file contents as u
 
 **Picker ↔ map sync is not a feature of either package**: the app keeps one kode and derives both from it (`apps/example-map`). The map stays independent of the picker and of React-free uses.
 
-**Unreleased until gate 3.** geo-data, geo and map-react are `private`, and `apps/example-map` is not deployed (the docs site has no map): publishing the boundaries in any form would be distributing them before their origin and licence are known ([cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9)). When it is answered: set the licence (ODbL if OSM-derived), remove `private`, add the packages to Trusted Publishing, and add the map to the docs site.
+**Unreleased until gate 3** (resolved 2026-11-04, below). geo-data, geo and map-react are `private`, and `apps/example-map` is not deployed (the docs site has no map): publishing the boundaries in any form would be distributing them before their origin and licence are known ([cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9)). When it is answered: set the licence (ODbL if OSM-derived), remove `private`, add the packages to Trusted Publishing, and add the map to the docs site.
+
+## 2026-11-04: map boundaries from BPS via HDX (gate 3)
+
+**cahyadsn/wilayah_boundaries cannot be published.** Asked in [#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9), the owner answered that the polygons are mixed: partly from Dukcapil, BIG and OpenStreetMap, partly traced from Google Maps, and that they may be used freely. That permission covers only his own work: data traced from Google Maps may not be redistributed under any licence, and the OSM parts would need ODbL. Since nobody knows which polygon comes from where, none of it is safe to publish.
+
+**Source: HDX cod-ab-idn (BPS, OCHA ROAP), CC BY 3.0 IGO.** Free for commercial use with attribution, so `@nusawilayah/geo-data` is CC BY 3.0 IGO while the code stays MIT; `DISCLAIMER` (shown under every map) carries the attribution. OpenStreetMap was the alternative: current, but ODbL share-alike for the whole data package and of uneven completeness for kecamatan. The two cannot be mixed. BIG's own boundaries would be the most official, but their terms of use are unclear.
+
+**Pairing by name.** BPS codes equal Kemendagri codes only at provinsi level, and the source is from 2020: kabupaten are paired by name within their type (kota with kota, so Kota Tegal never pairs with Kabupaten Tegal), with four renames written out; kecamatan by name within their kabupaten, one to one, best first, with a similarity of at least 0.6 after spelling out Roman numerals and abbreviations (`pipeline/geolib.ts`). All 514 kabupaten pair; 6,987 of 7,285 kecamatan (95.9%) do, the rest were created after 2020 and are listed in `meta.json`. The build prints every non-exact pair for review and fails below 95% coverage. Provinsi are dissolved from kabupaten, which gives the 2022 Papua provinces. Lakes, reservoirs and sea units (BPS codes `..88`, `..99`, `...888`, `...555`) are dropped.
+
+**Kecamatan simplified to 200 m** (was 150 m): the BPS lines are more detailed, and at 150 m Jawa Barat and Jawa Timur exceeded the 100 KB budget. Sizes now: provinsi 61 KB, kabupaten up to 24 KB, kecamatan up to 98 KB (gzip TopoJSON).
+
+**Source file pinned by sha256.** HDX refuses scripted downloads, so the 456 MB `idn_admin_boundaries.geojson.zip` is mirrored as a release asset of this repo (tag `geo-source`, allowed by the licence) for CI; a local copy in `pipeline/.cache` is used first.
 
 ## Not done yet
 
 - Gate 1: use the picker in a real project
 - lint and Storybook in CI, Lighthouse score
-- release the v0.3 map packages once gate 3 (boundary data origin, cahyadsn/wilayah_boundaries#9) is answered
+- first release of the v0.3 map packages (manual first publish, then Trusted Publishing)

@@ -1,33 +1,45 @@
 import { describe, expect, it } from 'vitest';
-import { pairing, parseBoundaries } from './geolib.ts';
+import { isKota, matchNames, normName, similarity, withoutType } from './geolib.ts';
 
-const sql = `INSERT INTO wilayah_boundaries(kode,nama,lat,lng,path) VALUES
-	('51.01','Kabupaten Jembrana',-8.31,114.68,'[[[-8.1,114.4],[-8.2,114.5],[-8.3,114.4],[-8.1,114.4]]]'),
-	('51.03','Kabupaten Ba''dung',-8.58,115.18,'[[[[-8.8,115.1],[-8.9,115.2],[-8.7,115.2],[-8.8,115.1]]],[[[-8.6,115.3],[-8.65,115.35],[-8.6,115.4],[-8.6,115.3]]]]');`;
-
-describe('parseBoundaries', () => {
-  it('reads Polygon and MultiPolygon rows and swaps [lat, lng] to GeoJSON [lng, lat]', () => {
-    const [jembrana, badung] = parseBoundaries(sql);
-    expect(jembrana).toEqual({
-      type: 'Feature',
-      kode: '51.01',
-      geometry: { type: 'Polygon', coordinates: [[[114.4, -8.1], [114.5, -8.2], [114.4, -8.3], [114.4, -8.1]]] },
-    });
-    expect(badung.kode).toBe('51.03'); // escaped quote in the name does not break the row
-    expect(badung.geometry.type).toBe('MultiPolygon');
-    expect(badung.geometry.coordinates[1]).toEqual([[[115.3, -8.6], [115.35, -8.65], [115.4, -8.6], [115.3, -8.6]]]);
+describe('normName', () => {
+  it('spells out Roman numerals and abbreviations, and keeps "Kota" inside kecamatan names', () => {
+    expect(normName('Kotabaru')).toBe(normName('Kota Baru'));
+    expect(normName('Ilir Timur III')).toBe(normName('Ilir Timur Tiga'));
+    expect(normName('P. Haruku')).toBe(normName('Pulau Haruku'));
+    expect(normName(withoutType('Kabupaten Kep. Siau Tagulandang Biaro'))).toBe('kepulauansiautagulandangbiaro');
+  });
+  it('withoutType drops the kabupaten/kota prefix', () => {
+    expect(withoutType('Kota Administrasi Jakarta Pusat')).toBe('Jakarta Pusat');
+    expect(withoutType('Kabupaten Badung')).toBe('Badung');
   });
 });
 
-describe('pairing', () => {
-  const official = new Map([['51.01', 'Kabupaten Jembrana'], ['51.02', 'Kabupaten Tabanan'], ['51.03', 'Kabupaten Badung']]);
-  it('reports missing, unknown and duplicate boundaries', () => {
-    const features = parseBoundaries(sql);
-    expect(pairing('kabupaten', features, official)).toEqual(['kabupaten: no boundary for 51.02 Kabupaten Tabanan']);
-    expect(pairing('kabupaten', [...features, features[0], { ...features[0], kode: '99.01' }], official)).toEqual([
-      'kabupaten: duplicate boundary 51.01',
-      'kabupaten: boundary 99.01 has no kode in the data',
-      'kabupaten: no boundary for 51.02 Kabupaten Tabanan',
-    ]);
+describe('similarity', () => {
+  it('scores spelling variants high and different names low', () => {
+    expect(similarity('bohorok', 'bahorok')).toBeGreaterThan(0.6);
+    expect(similarity(normName('Ilir Barat II'), normName('Ilir Barat Satu'))).toBeLessThan(similarity(normName('Ilir Barat II'), normName('Ilir Barat Dua')));
+    expect(similarity('kuta', 'kuta')).toBe(1);
   });
+});
+
+describe('matchNames', () => {
+  const official: [string, string][] = [['13.05.01', 'Lubuak Aluang'], ['13.05.02', 'Batang Anai'], ['13.05.17', 'Anam Lingkuang']];
+  it('pairs one to one, best first, and leaves dissimilar names unpaired', () => {
+    const m = matchNames(
+      [{ id: 'A', name: 'Lubuk Alung' }, { id: 'B', name: 'Batang Anai' }, { id: 'C', name: 'Batang Anai' }, { id: 'D', name: 'Sungai Limau' }],
+      official,
+      0.6,
+    );
+    expect(m.get('A')?.kode).toBe('13.05.01');
+    expect(m.get('B')).toEqual({ kode: '13.05.02', score: 1 });
+    expect(m.has('C')).toBe(false); // 13.05.02 is taken
+    expect(m.has('D')).toBe(false);
+  });
+  it('accepts alternative names separated by a slash', () => {
+    expect(matchNames([{ id: 'X', name: 'Konda/Kondaga' }], [['95.04.12', 'Kondaga']], 0.9).get('X')?.kode).toBe('95.04.12');
+  });
+});
+
+it('isKota reads the kota digit in both code systems', () => {
+  expect([isKota('ID3171'), isKota('31.71'), isKota('ID6302'), isKota('63.02')]).toEqual([true, true, false, false]);
 });

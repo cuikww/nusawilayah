@@ -1,7 +1,6 @@
 {
   "name": "@nusawilayah/geo",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Headless Indonesian region maps: loads @nusawilayah/geo-data boundaries and projects them to SVG paths",
   "license": "MIT",
   "type": "module",

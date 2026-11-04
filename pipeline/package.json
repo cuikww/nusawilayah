@@ -6,7 +6,7 @@
     "build:data": "node build.ts",
     "test": "vitest run",
     "typecheck": "tsc -p .",
-    "build:geo": "node geo.ts"
+    "build:geo": "node --max-old-space-size=8192 geo.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

@@ -14,13 +14,13 @@ Legenda: `[x]` selesai · `[ ]` belum · 🟡 sebagian (penjelasan di catatan)
 | --- | --- |
 | v0.1 Fondasi | Selesai. **Gerbang 1** (dipakai di 1 proyek nyata) masih menunggu pemilik proyek |
 | v0.2 Pencarian | Selesai, **Gerbang 2** lolos (axe + size-limit di CI) |
-| v0.3 Peta | Selesai dikerjakan, **belum dirilis**: paket peta `private` sampai **Gerbang 3** (asal data batas) jelas, ditanyakan di [cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9) |
+| v0.3 Peta | Selesai, **siap rilis**: Gerbang 3 lolos dengan sumber batas baru, BPS via HDX (CC BY 3.0 IGO). Menunggu terbitan pertama manual ke npm |
 | v1.0 Stabil | Belum dimulai |
 
 **Berikutnya:**
 
 1. Gerbang 1: pakai picker di 1 proyek nyata
-2. Gerbang 3: tunggu jawaban asal data batas, lalu tentukan lisensi paket peta (MIT, atau ODbL bila turunan OSM) dan rilis
+2. Rilis paket peta: terbitkan pertama kali secara manual, lalu pasang Trusted Publishing untuk ketiga paket
 3. v1.0: kunci API, adapter Vue, 2 co-maintainer, CONTRIBUTING.md
 
 **Di luar fase, belum dikerjakan:** lint dan Storybook di CI, skor Lighthouse, .zip di GitHub Releases, adapter sumber data kedua.
@@ -62,7 +62,7 @@ Tujuan utama: developer bisa memasang form alamat Indonesia yang lengkap dan cep
 - [x] Pencarian langsung ("kuta" langsung menyarankan Kuta, Badung, Bali)
 - [x] Ringan: memuat data hanya untuk level yang sedang dibuka
 - [x] Data selalu mengikuti Kepmendagri terbaru, dengan versi data yang jelas
-- [x] Peta interaktif 38 provinsi sampai kecamatan dengan kode yang sama — *Status:* selesai, belum dirilis (Gerbang 3)
+- [x] Peta interaktif 38 provinsi sampai kecamatan dengan kode yang sama — *Status:* selesai, siap rilis (sumber batas BPS via HDX)
 - [x] Inti headless, sehingga bisa dipakai di React, Vue, Svelte, atau vanilla JS — *Status:* core + adapter React; contoh Vue ada di README, adapter Vue resmi dijadwalkan v1.0
 
 **Non-tujuan**
@@ -117,8 +117,8 @@ Produk terdiri dari 5 paket dalam satu monorepo; v0.1 hanya merilis tiga paket p
 | @nusawilayah/data | Data wilayah + kode pos, dipecah per wilayah dalam JSON | v0.1 | ✅ terbit (2025.2.4) |
 | @nusawilayah/core | Logika headless: memuat data, cache, pencarian, state bertingkat | v0.1 | ✅ terbit (0.4.0) |
 | @nusawilayah/react | Komponen `<WilayahPicker>`, hook `useWilayah` | v0.1 | ✅ terbit (0.4.0) |
-| @nusawilayah/geo | Proyeksi dan render peta; data batas di paket terpisah per level (`geo-provinsi`, `geo-kabupaten`, `geo-kecamatan`) | v0.3 | 🟡 selesai, `private` sampai Gerbang 3; data batas dalam satu paket `@nusawilayah/geo-data` |
-| @nusawilayah/map-react | Komponen `<PetaIndonesia>` | v0.3 | 🟡 selesai, `private` sampai Gerbang 3 |
+| @nusawilayah/geo | Proyeksi dan render peta; data batas di paket terpisah per level (`geo-provinsi`, `geo-kabupaten`, `geo-kecamatan`) | v0.3 | 🟡 selesai, siap rilis; data batas dalam satu paket `@nusawilayah/geo-data` (CC BY 3.0 IGO) |
+| @nusawilayah/map-react | Komponen `<PetaIndonesia>` | v0.3 | 🟡 selesai, siap rilis |
 
 ### F1. Data (@nusawilayah/data)
 
@@ -151,8 +151,8 @@ Produk terdiri dari 5 paket dalam satu monorepo; v0.1 hanya merilis tiga paket p
 
 ### F4. Peta (@nusawilayah/geo, @nusawilayah/map-react)
 
-- [x] F4.1 Batas wilayah 38 provinsi, 514 kabupaten/kota, dan kecamatan, per file provinsi — *Status:* `@nusawilayah/geo-data`; setiap batas berpasangan dengan kode data
-- [x] F4.2 Tiga tingkat kehalusan garis (kasar untuk seluruh Indonesia, sedang untuk provinsi, halus untuk kabupaten) — *Status:* toleransi 1 km / 300 m / 150 m
+- [x] F4.1 Batas wilayah 38 provinsi, 514 kabupaten/kota, dan kecamatan, per file provinsi — *Status:* `@nusawilayah/geo-data` dari batas BPS 2020 (HDX); semua 38 provinsi dan 514 kabupaten/kota, 95,9% kecamatan (pemekaran setelah 2020 belum punya batas sendiri)
+- [x] F4.2 Tiga tingkat kehalusan garis (kasar untuk seluruh Indonesia, sedang untuk provinsi, halus untuk kabupaten) — *Status:* toleransi 1 km / 300 m / 200 m
 - [x] F4.3 `<PetaIndonesia level="kabupaten" provinsi="51" />`: render SVG, hover, klik, zoom ke wilayah — *Status:* plus keyboard (Enter/Space) dan `zoomTo`
 - [x] F4.4 Mewarnai wilayah dari data sendiri (choropleth) lewat prop data dan colorScale — *Status:* dengan legenda
 - [x] F4.5 Sinkron dua arah dengan `<WilayahPicker>` lewat kode Kemendagri yang sama — *Status:* diuji di `apps/example-map`
@@ -289,7 +289,7 @@ Ketiga sumber utama berasal dari Cahya DSN (cahyadsn), semuanya MIT, dan satu-sa
 | --- | --- | --- | --- |
 | wilayah | Kode dan nama wilayah, Kepmendagri 300.2.2-2430/2025 | SQL | 91.599 baris |
 | wilayah_kodepos | Kode pos per desa | SQL | 83.762 desa |
-| wilayah_boundaries | Batas wilayah (multipolygon, sudah disederhanakan) | SQL, satu file per provinsi per level | kabupaten 6,6 MB · kecamatan 12,2 MB · desa 187 MB |
+| wilayah_boundaries | Batas wilayah (multipolygon, sudah disederhanakan) | SQL, satu file per provinsi per level | kabupaten 6,6 MB · kecamatan 12,2 MB · desa 187 MB. **Tidak dipakai**: asal poligonnya campuran, termasuk tracing Google Maps (jawaban #9), diganti batas BPS via HDX |
 
 Repo lain miliknya (wilayah_logo, wilayah_api, wilayah_ref) tidak dipakai.
 
@@ -304,7 +304,7 @@ Kondisi data batas mentah (diperiksa langsung pada file Bali):
 - Tidak ada file batas level provinsi; batas provinsi dibentuk dengan menggabungkan kabupaten/kota di dalamnya (mapshaper -dissolve) — *Status:* sudah tidak berlaku: repo kini punya `db/prov/` (8 file), dan itu yang dipakai
 - Asal batasnya (BIG, OSM, atau olahan sendiri) belum tertulis di repo dan perlu dikonfirmasi ke pemiliknya
 
-Pengolahan peta: parse SQL, tukar urutan koordinat, gabungkan kabupaten menjadi provinsi, sederhanakan dengan mapshaper ke tiga tingkat kehalusan, lalu simpan sebagai TopoJSON (garis batas bersama disimpan sekali), GeoJSON, dan SVG, satu file per provinsi per level. *Status:* belum (v0.3).
+Pengolahan peta: parse SQL, tukar urutan koordinat, gabungkan kabupaten menjadi provinsi, sederhanakan dengan mapshaper ke tiga tingkat kehalusan, lalu simpan sebagai TopoJSON (garis batas bersama disimpan sekali), GeoJSON, dan SVG, satu file per provinsi per level. *Status:* selesai (v0.3), dengan sumber BPS via HDX: kecamatan dipasangkan ke kode Kemendagri lewat nama, provinsi digabung dari kabupaten.
 
 ## Desain API publik
 
@@ -411,7 +411,7 @@ File hasil konversi tidak disimpan di repo git; git hanya menyimpan skrip pipeli
 
 | Lokasi | Isi | Alasan | Status |
 | --- | --- | --- | --- |
-| npm (utama) | TopoJSON per provinsi, dipecah per level: @nusawilayah/geo-provinsi, geo-kabupaten, geo-kecamatan | Gratis; developer hanya memasang level yang dibutuhkan | 🟡 dibuat sebagai satu paket `@nusawilayah/geo-data`, belum dirilis (Gerbang 3) |
+| npm (utama) | TopoJSON per provinsi, dipecah per level: @nusawilayah/geo-provinsi, geo-kabupaten, geo-kecamatan | Gratis; developer hanya memasang level yang dibutuhkan | 🟡 dibuat sebagai satu paket `@nusawilayah/geo-data` (CC BY 3.0 IGO), siap rilis |
 | CDN jsDelivr / unpkg (otomatis) | File yang sama, langsung dari npm | Tanpa server sendiri, gratis, cepat di Indonesia | ✅ untuk data wilayah |
 | GitHub Releases | .zip SVG + GeoJSON siap unduh per level, plus SQLite dan CSV data wilayah | Untuk non-programmer, yang hanya butuh gambar, dan developer bahasa selain JavaScript | 🟡 SQLite dan CSV disajikan lewat npm/jsDelivr (`export/`), belum sebagai .zip di GitHub Releases (SVG + GeoJSON menyusul v0.3) |
 | Server developer (opsional) | Salinan lewat `npx nusawilayah copy` | Untuk aplikasi yang tidak boleh bergantung pada CDN | ✅ |
@@ -453,14 +453,15 @@ Keputusan: sumber data utama adalah repo-repo cahyadsn yang berlisensi MIT, buka
 | --- | --- | --- | --- |
 | cahyadsn/wilayah | Kode dan nama wilayah, Kepmendagri 300.2.2-2430/2025 | MIT | Sumber utama data wilayah |
 | cahyadsn/wilayah_kodepos | Kode pos per desa | MIT | Sumber utama kode pos |
-| cahyadsn/wilayah_boundaries | Batas wilayah (multipolygon sudah disederhanakan) | MIT | Sumber utama peta |
+| cahyadsn/wilayah_boundaries | Batas wilayah (multipolygon sudah disederhanakan) | MIT, tetapi asal poligon campuran | Tidak dipakai (lihat Gerbang 3) |
+| [HDX cod-ab-idn](https://data.humdata.org/dataset/cod-ab-idn) (BPS, OCHA ROAP) | Batas provinsi, kabupaten/kota, kecamatan, berlaku 1 April 2020 | CC BY 3.0 IGO | Sumber peta; `@nusawilayah/geo-data` ikut CC BY 3.0 IGO, atribusi tampil di bawah peta |
 | idn-area-data | Kode dan nama wilayah | Kode MIT, data ODbL | Hanya pembanding di CI, tidak didistribusikan |
 
 - [x] Kode proyek: MIT
 - [x] Data turunan: MIT, mencantumkan atribusi ke cahyadsn dan dasar hukum Kepmendagri di meta.json dan README
 - [x] Kode dan nama wilayah dari Kepmendagri adalah dokumen pemerintah; tetap dicantumkan nomor keputusannya
 - [x] Batas wilayah di peta adalah ilustrasi, bukan batas hukum. README dan komponen peta mencantumkan penafian ini; batas resmi mengacu pada Kemendagri dan Badan Informasi Geospasial (BIG)
-- [ ] Sebelum rilis peta, konfirmasi ke pemilik cahyadsn/wilayah_boundaries tentang asal data batasnya; jika turunan OpenStreetMap, paket geo-* dirilis dengan ODbL, kode dan data wilayah tetap MIT — *Status:* sudah ditanyakan ([#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9)), menunggu jawaban
+- [ ] Sebelum rilis peta, konfirmasi ke pemilik cahyadsn/wilayah_boundaries tentang asal data batasnya; jika turunan OpenStreetMap, paket geo-* dirilis dengan ODbL, kode dan data wilayah tetap MIT — *Status:* dijawab: datanya campuran (Dukcapil, BIG, OSM, tracing Google Maps), jadi tidak aman diterbitkan; sumber peta diganti batas BPS via HDX (CC BY 3.0 IGO), kode dan data wilayah tetap MIT
 
 ## Roadmap & milestone
 
@@ -494,7 +495,7 @@ SQLite, CSV, dan SPEC.md ikut dirilis sejak v0.1 karena hanya keluaran tambahan 
 - [x] PetaIndonesia
 - [x] choropleth
 - [x] sinkron dengan picker
-- [ ] **Gerbang 3:** asal data batas jelas — *Status:* ditanyakan di [cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9) (2 November 2026), belum dijawab
+- [x] **Gerbang 3:** asal data batas jelas — *Status:* dijawab 4 November 2026 (data campuran, tidak bisa dipakai); diganti batas BPS via HDX, CC BY 3.0 IGO
 
 **v1.0 Stabil (minggu 10 sampai 12)**
 
@@ -533,6 +534,6 @@ Risiko terbesar adalah ketergantungan pada satu sumber data yang dirawat satu or
 | Nama paket | nusawilayah, scope @nusawilayah. Per 2 November 2026 belum ada paket npm dengan nama ini; amankan org npm dan GitHub di minggu 1 | Nama sudah disetujui |
 | Setelah React | Adapter Vue di v1.0, port PHP/Laravel sesudahnya; Svelte hanya jika diminta komunitas | Vue hanya lapisan tipis di atas core (murah); pengguna PHP sudah terlayani SQLite/CSV sejak v0.1 |
 | Level dusun/RT/RW | Tidak didukung | Tidak ada di data Kepmendagri; alamat detail cukup kolom teks bebas di form |
-| Asal data batas cahyadsn | Tanyakan lewat issue GitHub di minggu 1; Gerbang 3 menahan rilis peta sampai jelas. Jika turunan OpenStreetMap, paket geo-* dirilis ODbL, sisanya tetap MIT | Peta adalah satu-satunya bagian dengan risiko lisensi |
+| Asal data batas cahyadsn | Terjadi: datanya campuran termasuk tracing Google Maps. Ditangani dengan sumber baru, batas BPS via HDX (CC BY 3.0 IGO); sisa risiko: batas 2020, kecamatan pemekaran baru belum punya batas sendiri | Peta adalah satu-satunya bagian dengan risiko lisensi |
 | Mode search | Indeks di browser, tanpa server API | Terukur: indeks nasional sampai kecamatan 57 KB, indeks desa per provinsi rata-rata 17 KB (gzip); server menambah biaya dan titik gagal |
 | Nama lama wilayah | Ya, mulai v0.2 sebagai field alias yang ikut dicari | Biaya kecil; mencegah alamat "tidak ketemu" setelah pergantian nama |
