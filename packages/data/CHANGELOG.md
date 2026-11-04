@@ -1,5 +1,11 @@
 # @nusawilayah/data
 
+## 2025.2.5
+
+### Patch Changes
+
+- b11b612: More npm keywords (alamat, kode-pos, dropdown, wilayah-indonesia, …) and README badges, so the packages are easier to find. No code or data changes.
+
 ## 2025.2.4
 
 ### Patch Changes

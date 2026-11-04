@@ -1,6 +1,6 @@
 {
   "name": "@nusawilayah/data",
-  "version": "2025.2.4",
+  "version": "2025.2.5",
   "description": "Indonesian administrative regions (Kepmendagri No. 300.2.2-2430 Tahun 2025) with postal codes, as split JSON, SQLite and CSV",
   "license": "MIT",
   "files": [
