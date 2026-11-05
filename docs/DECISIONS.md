@@ -148,7 +148,7 @@ Checked on 2 November 2026: both pinned sources hold the same file contents as u
 
 **Picker ↔ map sync is not a feature of either package**: the app keeps one kode and derives both from it (`apps/example-map`). The map stays independent of the picker and of React-free uses.
 
-**Unreleased until gate 3** (resolved 2026-11-04, below). geo-data, geo and map-react are `private`, and `apps/example-map` is not deployed (the docs site has no map): publishing the boundaries in any form would be distributing them before their origin and licence are known ([cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9)). When it is answered: set the licence (ODbL if OSM-derived), remove `private`, add the packages to Trusted Publishing, and add the map to the docs site.
+**Unreleased until gate 3** (resolved 2026-11-04, below; published 2026-11-05, the first versions by hand without provenance, later ones through Trusted Publishing). geo-data, geo and map-react are `private`, and `apps/example-map` is not deployed (the docs site has no map): publishing the boundaries in any form would be distributing them before their origin and licence are known ([cahyadsn/wilayah_boundaries#9](https://github.com/cahyadsn/wilayah_boundaries/issues/9)). When it is answered: set the licence (ODbL if OSM-derived), remove `private`, add the packages to Trusted Publishing, and add the map to the docs site.
 
 ## 2026-11-04: map boundaries from BPS via HDX (gate 3)
 
@@ -166,4 +166,4 @@ Checked on 2 November 2026: both pinned sources hold the same file contents as u
 
 - Gate 1: use the picker in a real project
 - lint and Storybook in CI, Lighthouse score
-- first release of the v0.3 map packages (manual first publish, then Trusted Publishing)
+- the map on the docs site, and SVG/PNG downloads of one region for people who do not code

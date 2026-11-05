@@ -6,7 +6,7 @@ Nov 2, 2026 · @kyky
 
 ## Status implementasi
 
-Per 3 November 2026: `@nusawilayah/core` 0.4.0, `@nusawilayah/react` 0.4.0, `@nusawilayah/data` 2025.2.4 terbit di npm (Trusted Publishing + provenance). Situs docs + playground: https://cuikww.github.io/nusawilayah/
+Per 5 November 2026: `@nusawilayah/core` 0.4.1, `@nusawilayah/react` 0.4.1, `@nusawilayah/data` 2025.2.5, `@nusawilayah/geo` 0.1.0, `@nusawilayah/map-react` 0.1.0, `@nusawilayah/geo-data` 2025.2.0 terbit di npm (Trusted Publishing; terbitan pertama paket peta manual, tanpa provenance). Situs docs + playground: https://cuikww.github.io/nusawilayah/
 
 Legenda: `[x]` selesai · `[ ]` belum · 🟡 sebagian (penjelasan di catatan)
 
@@ -14,13 +14,13 @@ Legenda: `[x]` selesai · `[ ]` belum · 🟡 sebagian (penjelasan di catatan)
 | --- | --- |
 | v0.1 Fondasi | Selesai. **Gerbang 1** (dipakai di 1 proyek nyata) masih menunggu pemilik proyek |
 | v0.2 Pencarian | Selesai, **Gerbang 2** lolos (axe + size-limit di CI) |
-| v0.3 Peta | Selesai, **siap rilis**: Gerbang 3 lolos dengan sumber batas baru, BPS via HDX (CC BY 3.0 IGO). Menunggu terbitan pertama manual ke npm |
+| v0.3 Peta | Selesai, **terbit** 5 November 2026: Gerbang 3 lolos dengan sumber batas baru, BPS via HDX (CC BY 3.0 IGO) |
 | v1.0 Stabil | Belum dimulai |
 
 **Berikutnya:**
 
 1. Gerbang 1: pakai picker di 1 proyek nyata
-2. Rilis paket peta: terbitkan pertama kali secara manual, lalu pasang Trusted Publishing untuk ketiga paket
+2. Peta di situs docs, unduhan SVG/PNG per wilayah untuk pengguna tanpa kode
 3. v1.0: kunci API, adapter Vue, 2 co-maintainer, CONTRIBUTING.md
 
 **Di luar fase, belum dikerjakan:** lint dan Storybook di CI, skor Lighthouse, .zip di GitHub Releases, adapter sumber data kedua.
@@ -62,7 +62,7 @@ Tujuan utama: developer bisa memasang form alamat Indonesia yang lengkap dan cep
 - [x] Pencarian langsung ("kuta" langsung menyarankan Kuta, Badung, Bali)
 - [x] Ringan: memuat data hanya untuk level yang sedang dibuka
 - [x] Data selalu mengikuti Kepmendagri terbaru, dengan versi data yang jelas
-- [x] Peta interaktif 38 provinsi sampai kecamatan dengan kode yang sama — *Status:* selesai, siap rilis (sumber batas BPS via HDX)
+- [x] Peta interaktif 38 provinsi sampai kecamatan dengan kode yang sama — *Status:* selesai, terbit (sumber batas BPS via HDX)
 - [x] Inti headless, sehingga bisa dipakai di React, Vue, Svelte, atau vanilla JS — *Status:* core + adapter React; contoh Vue ada di README, adapter Vue resmi dijadwalkan v1.0
 
 **Non-tujuan**
@@ -114,11 +114,11 @@ Produk terdiri dari 5 paket dalam satu monorepo; v0.1 hanya merilis tiga paket p
 
 | Paket | Isi | Rilis | Status |
 | --- | --- | --- | --- |
-| @nusawilayah/data | Data wilayah + kode pos, dipecah per wilayah dalam JSON | v0.1 | ✅ terbit (2025.2.4) |
-| @nusawilayah/core | Logika headless: memuat data, cache, pencarian, state bertingkat | v0.1 | ✅ terbit (0.4.0) |
-| @nusawilayah/react | Komponen `<WilayahPicker>`, hook `useWilayah` | v0.1 | ✅ terbit (0.4.0) |
-| @nusawilayah/geo | Proyeksi dan render peta; data batas di paket terpisah per level (`geo-provinsi`, `geo-kabupaten`, `geo-kecamatan`) | v0.3 | 🟡 selesai, siap rilis; data batas dalam satu paket `@nusawilayah/geo-data` (CC BY 3.0 IGO) |
-| @nusawilayah/map-react | Komponen `<PetaIndonesia>` | v0.3 | 🟡 selesai, siap rilis |
+| @nusawilayah/data | Data wilayah + kode pos, dipecah per wilayah dalam JSON | v0.1 | ✅ terbit (2025.2.5) |
+| @nusawilayah/core | Logika headless: memuat data, cache, pencarian, state bertingkat | v0.1 | ✅ terbit (0.4.1) |
+| @nusawilayah/react | Komponen `<WilayahPicker>`, hook `useWilayah` | v0.1 | ✅ terbit (0.4.1) |
+| @nusawilayah/geo | Proyeksi dan render peta; data batas di paket terpisah per level (`geo-provinsi`, `geo-kabupaten`, `geo-kecamatan`) | v0.3 | ✅ terbit (0.1.0); data batas dalam satu paket `@nusawilayah/geo-data` 2025.2.0 (CC BY 3.0 IGO) |
+| @nusawilayah/map-react | Komponen `<PetaIndonesia>` | v0.3 | ✅ terbit (0.1.0) |
 
 ### F1. Data (@nusawilayah/data)
 
@@ -411,7 +411,7 @@ File hasil konversi tidak disimpan di repo git; git hanya menyimpan skrip pipeli
 
 | Lokasi | Isi | Alasan | Status |
 | --- | --- | --- | --- |
-| npm (utama) | TopoJSON per provinsi, dipecah per level: @nusawilayah/geo-provinsi, geo-kabupaten, geo-kecamatan | Gratis; developer hanya memasang level yang dibutuhkan | 🟡 dibuat sebagai satu paket `@nusawilayah/geo-data` (CC BY 3.0 IGO), siap rilis |
+| npm (utama) | TopoJSON per provinsi, dipecah per level: @nusawilayah/geo-provinsi, geo-kabupaten, geo-kecamatan | Gratis; developer hanya memasang level yang dibutuhkan | 🟡 dibuat sebagai satu paket `@nusawilayah/geo-data` (CC BY 3.0 IGO), terbit |
 | CDN jsDelivr / unpkg (otomatis) | File yang sama, langsung dari npm | Tanpa server sendiri, gratis, cepat di Indonesia | ✅ untuk data wilayah |
 | GitHub Releases | .zip SVG + GeoJSON siap unduh per level, plus SQLite dan CSV data wilayah | Untuk non-programmer, yang hanya butuh gambar, dan developer bahasa selain JavaScript | 🟡 SQLite dan CSV disajikan lewat npm/jsDelivr (`export/`), belum sebagai .zip di GitHub Releases (SVG + GeoJSON menyusul v0.3) |
 | Server developer (opsional) | Salinan lewat `npx nusawilayah copy` | Untuk aplikasi yang tidak boleh bergantung pada CDN | ✅ |
