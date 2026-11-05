@@ -21,7 +21,7 @@ test('search a kabupaten, style it, download SVG with the attribution, then PNG'
   await expect(page.getByTestId('preview').locator('svg > title')).toHaveText('Kabupaten Lombok Barat');
   await expect(page.getByTestId('preview').locator('[data-kode]')).toHaveCount(1);
 
-  await page.getByRole('radio', { name: 'Dengan isinya' }).check();
+  await page.getByRole('radio', { name: 'Rinci' }).check();
   await page.getByRole('radio', { name: 'Hutan' }).check();
   await page.getByLabel('Nama wilayah').check();
   await expect(page.getByTestId('preview').locator('[data-kode^="52.01."]').first()).toHaveAttribute('fill', '#cfe3c8');
@@ -53,4 +53,22 @@ test('download page: no accessibility violations (axe, WCAG 2.1 AA)', async ({ p
   await expect(page.getByTestId('preview').locator('> svg')).toBeAttached();
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
   expect(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`)).toEqual([]);
+});
+
+test('one island: Lombok out of NTB, its five kabupaten/kota and nothing from Sumbawa; no credit text unless asked', async ({ page }) => {
+  await page.goto('/unduh.html?wilayah=52&tampilan=pulau');
+  const preview = page.getByTestId('preview');
+  await expect(preview.locator('[data-kode^="pulau-"]').first()).toBeAttached();
+  const lombok = page.getByLabel(/^Pulau \(/).locator('option', { hasText: 'Lombok Timur, Lombok Tengah' });
+  await page.getByLabel(/^Pulau \(/).selectOption(await lombok.getAttribute('value'));
+  await expect(page).toHaveURL(/pulau=\d+/);
+  await expect(preview.locator('[data-kode]')).toHaveCount(5);
+  await expect(preview.locator('[data-kode="52.71"]')).toBeAttached();
+  await expect(preview.locator('[data-kode="52.04"]')).toHaveCount(0);
+  await expect(preview.locator('svg > text')).toHaveCount(0);
+  await page.getByLabel('Keterangan sumber').check();
+  await expect(preview.locator('svg > text')).toHaveText('Batas wilayah: BPS (2020) via HDX, CC BY 3.0 IGO');
+  const svg = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Unduh SVG' }).click();
+  expect((await svg).suggestedFilename()).toBe('peta-pulau-lombok-timur.svg');
 });

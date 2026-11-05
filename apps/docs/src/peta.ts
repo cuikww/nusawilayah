@@ -1,18 +1,85 @@
 // Download page logic: which boundaries one map shows, and the SVG/PNG/GeoJSON files made from them. No React here.
 import { project, type GeoClient, type GeoFeature, type Region } from '@nusawilayah/geo';
 
-/** `sendiri`: the region alone. `konteks`: highlighted among its neighbours. `isi`: split into its sub-regions. */
-export type View = 'sendiri' | 'konteks' | 'isi';
+/**
+ * `sendiri`: the region alone. `konteks`: highlighted among its neighbours. `isi`: split into its sub-regions.
+ * `pulau`: one island of the region (Lombok out of NTB), still split into its sub-regions.
+ */
+export type View = 'sendiri' | 'konteks' | 'isi' | 'pulau';
 
 export interface Scene {
   features: GeoFeature[];
   highlight: Set<string>;
   /** Set when the region has no boundary of its own (kecamatan created after 2020). */
   notice?: string;
+  /** `pulau` view: the islands of the region, largest first. */
+  islands?: Island[];
+}
+
+export interface Island {
+  /** Its largest regions: 'Lombok Timur, Lombok Tengah +3' */
+  nama: string;
+  /** Approximate, km². */
+  area: number;
+  /** The regions on this island, each with only its polygons on this island. */
+  features: GeoFeature[];
+}
+
+/** Approximate area in km² of a polygon in [lng, lat]: shoelace on degrees, scaled at its latitude. */
+const areaOf = (polygon: GeoFeature['polygons'][number]) =>
+  polygon.reduce((sum, ring, i) => {
+    let a = 0;
+    for (let j = 0, k = ring.length - 1; j < ring.length; k = j++) a += (ring[k][0] - ring[j][0]) * (ring[k][1] + ring[j][1]);
+    const km = 111.32 ** 2 * Math.cos((ring[0][1] * Math.PI) / 180);
+    return sum + (i === 0 ? 1 : -1) * Math.abs(a / 2) * km; // later rings are holes
+  }, 0);
+
+/**
+ * Splits regions into islands. Neighbouring regions share their boundary points exactly (TopoJSON arcs),
+ * so polygons that share a point belong to one island.
+ */
+export function islands(features: GeoFeature[]): Island[] {
+  const polys = features.flatMap((f) => f.polygons.map((polygon) => ({ f, polygon, area: areaOf(polygon) })));
+  const parent = polys.map((_, i) => i);
+  const find = (i: number) => { while (parent[i] !== i) i = parent[i] = parent[parent[i]]; return i; };
+  const seen = new Map<string, number>();
+  polys.forEach(({ polygon }, i) => {
+    for (const ring of polygon) for (const [x, y] of ring) {
+      const j = seen.get(`${x},${y}`);
+      if (j === undefined) seen.set(`${x},${y}`, i); else parent[find(i)] = find(j);
+    }
+  });
+  const groups = new Map<number, typeof polys>();
+  polys.forEach((p, i) => { const g = find(i); groups.set(g, [...(groups.get(g) ?? []), p]); });
+  return [...groups.values()]
+    .map((group) => {
+      const byRegion = new Map<GeoFeature, { polygons: GeoFeature['polygons']; area: number }>();
+      for (const { f, polygon, area } of group) {
+        const r = byRegion.get(f) ?? { polygons: [], area: 0 };
+        r.polygons.push(polygon); r.area += area;
+        byRegion.set(f, r);
+      }
+      const regions = [...byRegion].sort((a, b) => b[1].area - a[1].area);
+      const names = regions.map(([f]) => f.nama.replace(/^Kabupaten /, ''));
+      return {
+        nama: names.length > 2 ? `${names[0]}, ${names[1]} +${names.length - 2}` : names.join(', '),
+        area: regions.reduce((sum, [, r]) => sum + r.area, 0),
+        features: regions.map(([f, r]) => ({ ...f, polygons: r.polygons })),
+      };
+    })
+    .sort((a, b) => b.area - a.area);
 }
 
 /** The boundaries of one map: '' is Indonesia, '52' a provinsi, '52.01' a kabupaten, '52.01.01' a kecamatan. */
-export async function loadScene(geo: GeoClient, kode: string, view: View): Promise<Scene> {
+export async function loadScene(geo: GeoClient, kode: string, view: View, pulau?: number): Promise<Scene> {
+  if (view === 'pulau') {
+    const list = islands((await loadScene(geo, kode, 'isi')).features);
+    const chosen = pulau === undefined ? undefined : list[pulau];
+    if (chosen) return { features: chosen.features, highlight: new Set(), islands: list };
+    // not chosen yet: one shape per island to click on
+    const shapes = list.map((p, i) => ({ kode: `pulau-${i}`, id: `pulau-${i}`, nama: p.nama, polygons: p.features.flatMap((f) => f.polygons) }));
+    return { features: shapes, highlight: new Set(), islands: list };
+  }
   const parts = kode ? kode.split('.') : [];
   const [prov] = parts;
   const kab = parts.slice(0, 2).join('.');
@@ -52,9 +119,11 @@ export interface Style {
   palette: string[];
   labels: boolean;
   title: boolean;
+  /** The source credit printed under the map. Always in the SVG's metadata. */
+  credit: boolean;
 }
 
-export interface Theme extends Omit<Style, 'strokeWidth' | 'multi' | 'labels' | 'title'> { name: string }
+export interface Theme extends Omit<Style, 'strokeWidth' | 'multi' | 'labels' | 'title' | 'credit'> { name: string }
 
 export const THEMES: Theme[] = [
   { name: 'Nusantara', bg: '#f4f8fb', fill: '#d5e3ee', highlight: '#0b57d0', stroke: '#ffffff', text: '#0f2742', palette: ['#7fb3d5', '#76c7c0', '#f7c873', '#f19c79', '#a29bfe', '#9ad08f'] },
@@ -66,8 +135,8 @@ export const THEMES: Theme[] = [
   { name: 'Monokrom', bg: '#ffffff', fill: '#e5e5e5', highlight: '#262626', stroke: '#ffffff', text: '#171717', palette: ['#d4d4d4', '#a3a3a3', '#e5e5e5', '#737373', '#bdbdbd', '#8a8a8a'] },
 ];
 
-/** Required by the boundary licence (CC BY 3.0 IGO): printed on every file. */
-export const CREDIT = 'Batas wilayah: BPS (2020) via HDX, CC BY 3.0 IGO · ilustrasi, bukan batas hukum · nusawilayah';
+/** Required by the boundary licence (CC BY 3.0 IGO) when the map is shared: in every SVG's metadata, under the map if `credit`. */
+export const CREDIT = 'Batas wilayah: BPS (2020) via HDX, CC BY 3.0 IGO';
 
 const overlap = (a: Region, b: Region) =>
   a.box[0] <= b.box[0] + b.box[2] && b.box[0] <= a.box[0] + a.box[2] && a.box[1] <= b.box[1] + b.box[3] && b.box[1] <= a.box[1] + a.box[3];
@@ -111,8 +180,8 @@ export function toSvg(scene: Scene, style: Style, title: string, subtitle: strin
   const [iw, ih] = [cw * k, ch * k];
   const pad = 32;
   const top = style.title ? 96 : pad;
-  const width = Math.round(Math.max(iw, 640) + 2 * pad);
-  const height = Math.round(top + ih + 48);
+  const width = Math.round(Math.max(iw, style.title || style.credit ? 640 : 0) + 2 * pad); // room for the text
+  const height = Math.round(top + ih + (style.credit ? 48 : pad));
   const inView = (r: Region) => r.box[0] < cx + cw && r.box[0] + r.box[2] > cx && r.box[1] < cy + ch && r.box[1] + r.box[3] > cy;
   const regions = map.regions.filter(inView);
 
@@ -136,6 +205,7 @@ export function toSvg(scene: Scene, style: Style, title: string, subtitle: strin
   const svg = [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">`,
     `<title>${esc(title)}</title>`,
+    `<desc>${esc(`${CREDIT}. Ilustrasi, bukan batas hukum. Dibuat dengan nusawilayah.`)}</desc>`,
     style.bg ? `<rect width="${width}" height="${height}" fill="${style.bg}"/>` : '',
     style.title ? `<text x="${width / 2}" y="52" text-anchor="middle" font-size="30" font-weight="700" fill="${style.text}">${esc(title)}</text>` : '',
     style.title ? `<text x="${width / 2}" y="78" text-anchor="middle" font-size="15" fill="${style.text}" fill-opacity="0.7">${esc(subtitle)}</text>` : '',
@@ -143,7 +213,7 @@ export function toSvg(scene: Scene, style: Style, title: string, subtitle: strin
     `<g stroke="${style.strokeWidth ? style.stroke : 'none'}" stroke-width="${r1(style.strokeWidth / k * 100) / 100}" stroke-linejoin="round">${paths.join('')}</g>`,
     labels.length ? `<g text-anchor="middle" dominant-baseline="central" font-weight="600" stroke-width="${r1(3 / k * 100) / 100}" paint-order="stroke" stroke-linejoin="round">${labels.join('')}</g>` : '',
     '</svg>',
-    `<text x="${width / 2}" y="${height - 18}" text-anchor="middle" font-size="12" fill="${style.text}" fill-opacity="0.65">${esc(CREDIT)}</text>`,
+    style.credit ? `<text x="${width / 2}" y="${height - 18}" text-anchor="middle" font-size="12" fill="${style.text}" fill-opacity="0.65">${esc(CREDIT)}</text>` : '',
     '</svg>',
   ].join('');
   return { svg, width, height };
