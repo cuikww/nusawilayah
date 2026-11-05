@@ -32,6 +32,9 @@ importers:
       '@nusawilayah/core':
         specifier: workspace:^
         version: link:../../packages/core
+      '@nusawilayah/geo':
+        specifier: workspace:^
+        version: link:../../packages/geo
       '@nusawilayah/react':
         specifier: workspace:^
         version: link:../../packages/react

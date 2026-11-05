@@ -26,7 +26,7 @@
 | --- | --- |
 | ![Cascade mode: Bali, Kabupaten Badung, Kuta, Tuban, postal code 80361](docs/images/cascade.png) | ![Search mode: typing "denpasar" lists Kota Denpasar and its districts](docs/images/search.png) |
 
-**Try it in the [playground](https://cuikww.github.io/nusawilayah/)**, or run it yourself: `pnpm install && pnpm build && pnpm --filter docs dev`.
+**Try it in the [playground](https://cuikww.github.io/nusawilayah/)**. No code? [Download a map](https://cuikww.github.io/nusawilayah/unduh.html) of any provinsi, kabupaten/kota or kecamatan as SVG, PNG or GeoJSON, in your own colours. Or run it yourself: `pnpm install && pnpm build && pnpm --filter docs dev`.
 
 ## Contents
 
@@ -422,7 +422,7 @@ import { PetaIndonesia } from '@nusawilayah/map-react'
 <PetaIndonesia data={{ '51': 120, '32': 340 }} />   // choropleth with legend
 ```
 
-The boundary files (TopoJSON, GeoJSON for Leaflet/MapLibre/D3, and SVG with `id="kab-51-03"` per region for plain HTML) come from the BPS boundaries on [HDX](https://data.humdata.org/dataset/cod-ab-idn) (valid on 1 April 2020, CC BY 3.0 IGO): all 38 provinsi and 514 kabupaten/kota, and about 96% of kecamatan (those created after 2020 are drawn inside the kecamatan they split from). The map shows the required attribution under it. Try it locally: `pnpm --filter example-map dev`. Boundaries are illustrative, not legal boundaries.
+The boundary files (TopoJSON, GeoJSON for Leaflet/MapLibre/D3, and SVG with `id="kab-51-03"` per region for plain HTML) come from the BPS boundaries on [HDX](https://data.humdata.org/dataset/cod-ab-idn) (valid on 1 April 2020, CC BY 3.0 IGO): all 38 provinsi and 514 kabupaten/kota, and about 96% of kecamatan (those created after 2020 are drawn inside the kecamatan they split from). The map shows the required attribution under it. Without code: the [download page](https://cuikww.github.io/nusawilayah/unduh.html) makes SVG, PNG and GeoJSON of one region. Try it locally: `pnpm --filter example-map dev`. Boundaries are illustrative, not legal boundaries.
 
 ## Other languages: JSON, SQLite, CSV
 

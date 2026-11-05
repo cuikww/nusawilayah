@@ -140,6 +140,7 @@ export function App() {
           <a href={REPO}>GitHub</a>
           <a href="https://www.npmjs.com/package/@nusawilayah/react">npm</a>
           <a href={doc('docs/SPEC.md')}>Data spec</a>
+          <a href={`${import.meta.env.BASE_URL}unduh.html`}>Download maps (SVG, PNG)</a>
         </nav>
       </header>
       <main>

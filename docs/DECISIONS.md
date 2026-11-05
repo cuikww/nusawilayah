@@ -162,8 +162,12 @@ Checked on 2 November 2026: both pinned sources hold the same file contents as u
 
 **Source file pinned by sha256.** HDX refuses scripted downloads, so the 456 MB `idn_admin_boundaries.geojson.zip` is mirrored as a release asset of this repo (tag `geo-source`, allowed by the licence) for CI; a local copy in `pipeline/.cache` is used first.
 
+## 2026-11-05: map download page for people who do not code
+
+`apps/docs/unduh.html`: search a provinsi, kabupaten/kota or kecamatan, show it alone, highlighted among its neighbours (zoomed to it) or split into its sub-regions, pick a theme or own colours, download SVG, PNG (drawn on a canvas, 1×/2×/4×) or GeoJSON. All in the browser, no server and no new dependency. One function (`toSvg`) makes both the preview and the files, so what is shown is what is downloaded, and the CC BY 3.0 IGO credit is part of every picture. Boundaries load from jsDelivr (building geo-data in the Pages workflow would need the 456 MB source); e2e tests serve the local build instead. "Warna-warni" colours neighbours differently using bounding boxes as adjacency, which is over-cautious but never misses a neighbour.
+
 ## Not done yet
 
 - Gate 1: use the picker in a real project
 - lint and Storybook in CI, Lighthouse score
-- the map on the docs site, and SVG/PNG downloads of one region for people who do not code
+- the interactive map (`<PetaIndonesia>` with the picker) on the docs site
